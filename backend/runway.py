@@ -19,6 +19,7 @@ class Runway:
     def canTakeOff(self):
         return self.occupiedUntil == None and ((self.Mode == "Mixed") or (self.Mode == "TakeOff"))
 
+    #turns bearing into a string with the correct bearing format for UI output.
     def getBearingString(self):
         if self.bearing <= 9:
             return str("0" + str(self.bearing))
