@@ -1,15 +1,5 @@
-# This lets us know the flight type for the aircraft and to toggle the fligh type at will
-class FlightType:
-    def __init__(self, type):
-        if type not in ["INBOUND","OUTBOUND"]:
-            raise ValueError("Mode must be INBOUND or OUTBOUND")
-        self.type = type
-    
-    def setType(self, newtype: str) -> None:
-        self.type = newtype
-    
-    def getType(self) -> str:
-        return self.type
+import random
+import string
 
 class EmergencyType:
     def __init__(self,mechanical_failure: bool, passenger_illness: bool, fuel_amt: int):
@@ -27,16 +17,28 @@ class EmergencyType:
         return
 
 class Aircraft:
-    def __init__(self, id: str, type: FlightType, scheduledTime: SimTime, actualTime: SimTime, state: AircraftState, fuelRemaining: SimTime, Emergency: EmergencyType, enteredHoldingAt: SimTime, joinedTakeoffQueueAt: Simtime):
-        self.id = id
-        self.type = type
+    def __init__(self, aircraft_id, flight_type, scheduledTime: SimTime, state, altitude, Emergency: EmergencyType, enteredHoldingAt: SimTime, joinedTakeoffQueueAt: SimTime):
+        self.id = aircraft_id
+        self.type = flight_type #a string that will either be INBOUND or OUTBOUND
         self.scheduledTime = scheduledTime
-        self.actualTime = actualTime
+        self.actualTime = random.normal(self.scheduledTime, 5) #normal distribution around expected time, standard deviation of 5 mins
         self.state = state
-        self.fuelRemaining = fuelRemaining
+        self.fuelRemaining = random.uniform(20,60) #fuel remaining is uniformly distributed between 20-60 minutes
+        self.altitude = altitude
         self.Emergency = Emergency
         self.enteredHoldingAt = enteredHoldingAt
         self.joinedTakeoffQueueAt = joinedTakeoffQueueAt
+
+        icao_code = ["Boeing ", "Airbus ", "RYANAIR ", "Speedbird ", "Emirates ", "EASY ", "Oceanic ", "Virgin ", "TOMJET ", "Delta ", "American ", "United "]
+        self.callsign = icao_code[random.randint(0,len(icao_code)-1)] + str(random.randint(100,999))
+        self.operator = random.choice(string.ascii_uppercase) + random.choice(string.ascii_uppercase)
+        self.ground_speed = random.randint(300,600)
+        if self.type == "INBOUND":
+            self.origin = random.choice(string.ascii_uppercase) + random.choice(string.ascii_uppercase) + random.choice(string.ascii_uppercase)
+            self.destination = "SIMULATED AIRPORT" #placeholder for out airport name
+        else:
+            self.type = "SIMULATED AIRPORT" #placeholder for our airport name
+            self.destination = random.choice(string.ascii_uppercase) + random.choice(string.ascii_uppercase) + random.choice(string.ascii_uppercase)
 
     def isEmergency() -> bool:
         return
@@ -46,7 +48,6 @@ class Aircraft:
     
     def consumeFuel(data: SimTime) -> None:
         return
-    
 
 # TODO:
 # Implement SimTime; very crucial for the system but idk what it is or how to implement it
