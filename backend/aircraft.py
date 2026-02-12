@@ -1,33 +1,25 @@
 import random
 import string
 
-from backend.airport import SimTime
+from SimulationEngine import SimTime
 
 
 class EmergencyType:
-    def __init__(self,mechanical_failure: bool, passenger_illness: bool, fuel_amt: int):
+    def __init__(self,mechanical_failure: bool, passenger_illness: bool): #removed fuel_amt 
         self.mechanical_failure = mechanical_failure
         self.passenger_illness = passenger_illness
-        self.fuel_amt = fuel_amt
     
-    def getmechfailure(self) -> bool:
-        return
     
-    def getpassengerillness(self) -> bool:
-        return
-    
-    def getfuelamt(self) -> int:
-        return
 
 class Aircraft:
-    def __init__(self, aircraft_id, flight_type, scheduledTime: SimTime, altitude, Emergency: EmergencyType, enteredHoldingAt: SimTime, joinedTakeoffQueueAt: SimTime):
+    def __init__(self, aircraft_id, flight_type, scheduledTime, actualTime, fuelRemaining, altitude, emergency, enteredHoldingAt, joinedTakeoffQueueAt):
         self.id = aircraft_id
         self.type = flight_type #a string that will either be INBOUND or OUTBOUND
         self.scheduledTime = scheduledTime
-        self.actualTime = random.normal(self.scheduledTime, 5) #normal distribution around expected time, standard deviation of 5 mins
-        self.fuelRemaining = random.uniform(20,60) #fuel remaining is uniformly distributed between 20-60 minutes
+        self.actualTime = actualTime #this is of type SimTime
+        self.fuelRemaining = fuelRemaining
         self.altitude = altitude
-        self.Emergency = Emergency
+        self.emergency = emergency #this variable is of type EmergencyType
         self.enteredHoldingAt = enteredHoldingAt
         self.joinedTakeoffQueueAt = joinedTakeoffQueueAt
 

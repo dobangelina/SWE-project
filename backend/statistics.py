@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
-SimTime = float  
+from SimulationEngine import SimTime
+
 @dataclass
 class Statistics:
     # Queue Sizes
@@ -17,7 +18,7 @@ class Statistics:
     # Arrival / Delay Metrics
     arrival_delay_sum: float = 0.0
     arrival_count: int = 0
-    max_arrival_delay:  SimTime = 0.0
+    max_arrival_delay:  SimTime = 0.0 # Please change this, SimTime is an object
     
     # Exceptions
     diversions: int = 0

@@ -1,24 +1,9 @@
 from typing import List
 
-from backend.Queues import HoldingQueue, TakeOffQueue
-from backend.runway import Runway
+from Queues import HoldingQueue, TakeOffQueue
+from runway import Runway
+from SimulationEngine import SimTime
 
-class SimTime:
-    def __init__(self, time: SimTime) -> None:
-        self.time = time
-
-
-class RunwayMode:
-    def __init__(self, mode):
-        if mode not in ["L","T"]:
-            raise ValueError("Mode must be L or T")
-        self.mode = mode
-    
-    def setMode(self, newMode: str) -> None:
-        self.mode = newMode
-    
-    def getMode(self) -> str:
-        return self.mode
 
 # Other classes are yet to be made but the airport class needs to inherit from them
 class Airport:
@@ -27,13 +12,28 @@ class Airport:
         self.holding = holding
         self.takeoff = takeoff
 
+    def handleInbound(self, aircraft, now):
+        self.holding.enqueue(aircraft, now)
+
+    def handleOutbound(self, aircraft, now):
+        self.takeoff.enqueue(aircraft, now)
+
+    def updateRunways(now):
+        pass
+
+    def assignLanding(now):
+        pass
+
+    def assignTakeOff(now):
+        pass
+
     def assignLanding(self) -> None:
         return
     
     def assigntakeoff(self) -> None:
         return
     
-    def getEligibleRunways(self,mode: RunwayMode) -> List[Runway]:
+    def getEligibleRunways(self, mode: str) -> List[Runway]:
         return
     
     def updateRunways(time: SimTime) -> None:

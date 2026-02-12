@@ -11,6 +11,10 @@ from aircraft import Aircraft
 from statistics import Statistics
 
 
+# Moved from airport to SimEng
+class SimTime:
+    def __init__(self, time: SimTime) -> None:
+        self.time = time
 
 @dataclass
 class SimulationEngine:

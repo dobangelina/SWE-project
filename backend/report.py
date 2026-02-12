@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from SimulationEngine import SimTime
 SimTime = float
 
 @dataclass
