@@ -229,7 +229,7 @@ class SimulationEngine:
             aircraft_id,
             "OUTBOUND",
             int(now),
-            0,              # ✔ fixed outbound fuel
+            0,              #  fixed outbound fuel
             emergency=None,
         )
 
