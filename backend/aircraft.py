@@ -1,7 +1,6 @@
 import random
 import string
 
-from backend.airport import SimTime
 
 
 class EmergencyType:
