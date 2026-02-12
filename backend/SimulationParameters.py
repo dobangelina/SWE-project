@@ -20,6 +20,13 @@ class SimulationParams:
     fuel_min_min: int = 10
     fuel_initial_min_min: int = 20
     fuel_initial_max_min: int = 60
+    # Emergency events per tick (counts, not probabilities)
+    emergencies_per_tick: int = 0
+
+    # distribution of emergency types (weights)
+    p_mechanical_failure: float = 0.4
+    p_passenger_illness: float = 0.4
+    p_fuel_emergency: float = 0.2
 
     # Engine timing
     tick_size_min: int = 1                  # 1-minute discrete tick
@@ -48,3 +55,9 @@ class SimulationParams:
             raise ValueError("fuel_initial_min_min must be <= fuel_initial_max_min.")
         if self.fuel_min_min >= self.fuel_initial_min_min:
             raise ValueError("fuel_min_min must be < fuel_initial_min_min.")
+        if self.emergencies_per_tick < 0:
+            raise ValueError("emergencies_per_tick must be >= 0.")
+        s = self.p_mechanical_failure + self.p_passenger_illness + self.p_fuel_emergency
+        if abs(s - 1.0) > 1e-9:
+            raise ValueError("Emergency probabilities must sum to 1.0.")
+
