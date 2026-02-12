@@ -20,7 +20,7 @@ class EmergencyType:
         return
 
 class Aircraft:
-    def __init__(self, aircraft_id, flight_type, scheduledTime: SimTime, altitude):
+    def __init__(self, aircraft_id, flight_type, scheduledTime: SimTime, altitude, Emergency: EmergencyType, enteredHoldingAt: SimTime, joinedTakeoffQueueAt: SimTime):
         self.id = aircraft_id
         self.type = flight_type #a string that will either be INBOUND or OUTBOUND
         self.scheduledTime = scheduledTime
