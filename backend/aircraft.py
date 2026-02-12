@@ -17,12 +17,11 @@ class EmergencyType:
         return
 
 class Aircraft:
-    def __init__(self, aircraft_id, flight_type, scheduledTime: SimTime, state, altitude, Emergency: EmergencyType, enteredHoldingAt: SimTime, joinedTakeoffQueueAt: SimTime):
+    def __init__(self, aircraft_id, flight_type, scheduledTime: SimTime, altitude, Emergency: EmergencyType, enteredHoldingAt: SimTime, joinedTakeoffQueueAt: SimTime):
         self.id = aircraft_id
         self.type = flight_type #a string that will either be INBOUND or OUTBOUND
         self.scheduledTime = scheduledTime
         self.actualTime = random.normal(self.scheduledTime, 5) #normal distribution around expected time, standard deviation of 5 mins
-        self.state = state
         self.fuelRemaining = random.uniform(20,60) #fuel remaining is uniformly distributed between 20-60 minutes
         self.altitude = altitude
         self.Emergency = Emergency
