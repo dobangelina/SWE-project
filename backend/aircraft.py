@@ -20,7 +20,7 @@ class EmergencyType:
         return
 
 class Aircraft:
-    def __init__(self, aircraft_id, flight_type, scheduledTime: SimTime, altitude, Emergency: EmergencyType, enteredHoldingAt: SimTime, joinedTakeoffQueueAt: SimTime):
+    def __init__(self, aircraft_id, flight_type, scheduledTime: SimTime, altitude):
         self.id = aircraft_id
         self.type = flight_type #a string that will either be INBOUND or OUTBOUND
         self.scheduledTime = scheduledTime
@@ -51,5 +51,3 @@ class Aircraft:
     def consumeFuel(self,data: SimTime) -> None:
         return
 
-# TODO:
-# Implement SimTime; very crucial for the system but idk what it is or how to implement it
