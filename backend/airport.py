@@ -1,6 +1,10 @@
 from backend.Queues import HoldingQueue, TakeOffQueue
 from backend.runway import Runway
 
+class SimTime:
+    def __init__(self, time: SimTime) -> None:
+        self.time = time
+
 
 class RunwayMode:
     def __init__(self, mode):
