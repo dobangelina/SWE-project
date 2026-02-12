@@ -6,21 +6,13 @@ from typing import List, Tuple, Optional
 
 from SimulationParameters import SimulationParams
 from airport import Airport
-from aircraft import Aircraft
+from aircraft import Aircraft, SimTime
 from statistics import Statistics
 
 
 # SimTime
 
-@dataclass(frozen=True, order=True)
-class SimTime:
-    minutes: int = 0
 
-    def __int__(self) -> int:
-        return self.minutes
-
-    def advance(self, delta: int) -> "SimTime":
-        return SimTime(self.minutes + int(delta))
 
 
 
