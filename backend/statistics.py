@@ -43,7 +43,6 @@ class Statistics:
     runway_busy_time: Dict[Any, int] = field(default_factory=dict)
 
     def configure_from_params(self, params: Any, seed: Optional[int] = None) -> None:
-        # FIX: correct attribute names + tick size
         self._arrival_stddev_min = int(getattr(params, "arrival_stddev_min", 0))
         self._departure_stddev_min = int(getattr(params, "departure_stddev_min", 0))
         self._tick_size_min = int(getattr(params, "tick_size_min", 1)) or 1
