@@ -97,7 +97,6 @@ class Statistics:
         setattr(aircraft, "joinedTakeoffQueueAt", int(time))
 
     def record_takeoff(self, aircraft: Any, time: SimTime) -> None:
-        # FIX: update the correct counters (old code referenced non-existent fields)
         joined = getattr(aircraft, "joinedTakeoffQueueAt", None)
         if joined is None:
             return
