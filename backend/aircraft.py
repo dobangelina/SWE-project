@@ -16,9 +16,7 @@ class Aircraft:
     EmergencyType is CREATED by SimulationEngine and injected here.
     """
 
-    def __init__(self, aircraft_id: str, flight_type: str, scheduledTime: int, fuelRemaining: int,
-                 *, emergency: Optional[EmergencyType] = None, altitude: int = 0, 
-                 enteredHoldingAt: Optional[int] = None, joinedTakeoffQueueAt: Optional[int] = None):
+    def __init__(self, aircraft_id: str, flight_type: str, scheduledTime: int, fuelRemaining: int,*, emergency: Optional[EmergencyType] = None, altitude: int = 0, enteredHoldingAt: Optional[int] = None, joinedTakeoffQueueAt: Optional[int] = None):
         
         self.id = aircraft_id
         self.type = flight_type #a string that will either be INBOUND or OUTBOUND
