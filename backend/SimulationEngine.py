@@ -1,9 +1,10 @@
 from __future__ import annotations
 import random
 from dataclasses import dataclass
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Any
 
-# NOTE: SimTime class removed as per instructions (using int for minutes)
+SimTime = int  # for compatibility across backend modules
+
 
 @dataclass
 class EmergencyType:
@@ -11,51 +12,35 @@ class EmergencyType:
     passenger_illness: bool = False
     fuel_emergency: bool = False
 
+
 @dataclass
 class SimulationEngine:
-    """
-    Tick-based simulation controller.
-    
-    Key properties:
-      - time is tracked in int minutes for easier calculations
-      - Demand generation is rate-based (accumulators per tick)
-      - Timing noise (normal distribution) lives in Statistics
-      - Jittered aircraft are placed into pending lists, then flushed into queues per tick
-    """
-
-    params: any  # Type hint is 'any' for the time being to avoid import issues if SimulationParams isn't perfect
-    airport: any
-    stats: any
+    params: Any
+    airport: Any
+    stats: Any
     seed: Optional[int] = None
 
     def __post_init__(self) -> None:
         if hasattr(self.params, "validate"):
             self.params.validate()
 
-        # Configure statistics
         if hasattr(self.stats, "configure_from_params"):
             self.stats.configure_from_params(self.params, seed=self.seed)
 
-        # Simulation time in minutes
         self.current_time: int = 0
         self.is_paused: bool = False
 
-        # Rate accumulators
         self._inbound_acc: float = 0.0
         self._outbound_acc: float = 0.0
 
-        # Pending spawns 
-        self._pending_inbound: List[Tuple[int, any]] = []
-        self._pending_outbound: List[Tuple[int, any]] = []
+        self._pending_inbound: List[Tuple[int, Any]] = []
+        self._pending_outbound: List[Tuple[int, Any]] = []
 
-        # RNG 
         self._rng = random.Random(self.seed)
 
-        # ID counters
         self._next_in_id: int = 1
         self._next_out_id: int = 1
 
-    # Tick loop
     def tick(self) -> None:
         if self.is_paused:
             return
@@ -64,26 +49,33 @@ class SimulationEngine:
         self.current_time += dt
         now = self.current_time
 
-        self.airport.update_runways(now)
+        # update runway completion / availability
+        if hasattr(self.airport, "updateRunways"):
+            self.airport.updateRunways(now)
 
-        self._flush_pending(now)
-
+        # generate arrivals/departures (adds to pending with jitter)
         self._generate_arrivals(now, dt)
         self._generate_departures(now, dt)
 
+        # flush pending due
+        self._flush_pending(now)
+
+        # apply constraints
         self.update_constraints(now, dt)
 
+        # attempt assignments
         if hasattr(self.airport, "assignLanding"):
             self.airport.assignLanding(now)
-        if hasattr(self.airport, "assignTakeoff"): 
-            self.airport.assignTakeoff(now)
+        if hasattr(self.airport, "assignTakeOff"):
+            self.airport.assignTakeOff(now)
 
-        
-        self.stats.snapshot_queues(
-            holding_size=self.airport.holding.size(),
-            takeoff_size=self.airport.takeoff.size(),
-            time=now
-        )
+        # stats snapshot
+        if hasattr(self.stats, "snapshot_queues"):
+            self.stats.snapshot_queues(
+                holding_size=self.airport.holding.size(),
+                takeoff_size=self.airport.takeoff.size(),
+                time=now,
+            )
 
     def run_for(self, duration_min: int) -> None:
         end_time = self.current_time + int(duration_min)
@@ -94,7 +86,6 @@ class SimulationEngine:
     def expected_per_tick(rate_per_hour: float, dt_min: int) -> float:
         return rate_per_hour * (dt_min / 60.0)
 
-    # Emergency generation
     def _create_emergency(self) -> EmergencyType:
         r = self._rng.random()
         p_mech = self.params.p_mechanical_failure
@@ -107,40 +98,33 @@ class SimulationEngine:
         else:
             return EmergencyType(fuel_emergency=True)
 
-    def _apply_emergencies_this_tick(self, aircraft_created: List[any]) -> None:
+    def _apply_emergencies_this_tick(self, aircraft_created: List[Any]) -> None:
         n = int(self.params.emergencies_per_tick)
         if n <= 0 or not aircraft_created:
             return
 
         k = min(n, len(aircraft_created))
-        chosen = self._rng.sample(aircraft_created, k)
+        for a in self._rng.sample(aircraft_created, k):
+            setattr(a, "emergency", self._create_emergency())
 
-        for a in chosen:
-            a.emergency = self._create_emergency()
-
-    # Arrival / departure generation
     def _generate_arrivals(self, now: int, dt: int) -> None:
         self._inbound_acc += self.expected_per_tick(self.params.inbound_rate_per_hour, dt)
-        created = []
+        created: List[Any] = []
 
         while self._inbound_acc >= 1.0:
             self._inbound_acc -= 1.0
 
-            # Create aircraft 
             a = self.make_inbound_aircraft(now)
             created.append(a)
 
-            # Sample actual spawn time (jitter) via Statistics
             spawn_time = self.stats.sample_inbound_spawn_time(now)
-            
-            # Add to pending list
             self._pending_inbound.append((spawn_time, a))
 
         self._apply_emergencies_this_tick(created)
 
     def _generate_departures(self, now: int, dt: int) -> None:
         self._outbound_acc += self.expected_per_tick(self.params.outbound_rate_per_hour, dt)
-        created = []
+        created: List[Any] = []
 
         while self._outbound_acc >= 1.0:
             self._outbound_acc -= 1.0
@@ -153,44 +137,34 @@ class SimulationEngine:
 
         self._apply_emergencies_this_tick(created)
 
-    # Pending flush
     def _flush_pending(self, now: int) -> None:
-       
         # Inbound
         if self._pending_inbound:
             due, future = [], []
             for t, a in self._pending_inbound:
-                if t <= now:
-                    due.append((t, a))
-                else:
-                    future.append((t, a))
+                (due if t <= now else future).append((t, a))
             self._pending_inbound = future
-            
+
             for t, a in due:
-                self.airport.handleInbound(a, t) # Pass the actual spawn time 't'
+                self.airport.handleInbound(a, t)
 
         # Outbound
         if self._pending_outbound:
             due, future = [], []
             for t, a in self._pending_outbound:
-                if t <= now:
-                    due.append((t, a))
-                else:
-                    future.append((t, a))
+                (due if t <= now else future).append((t, a))
             self._pending_outbound = future
-            
+
             for t, a in due:
                 self.airport.handleOutbound(a, t)
 
     def update_constraints(self, now: int, dt: int) -> None:
-        """
-        Placeholder for fuel burn logic, etc.
-        """
+
         pass
 
-    # Aircraft factories
     def make_inbound_aircraft(self, now: int):
-        from backend.aircraft import Aircraft
+        from aircraft import Aircraft  # everything is in backend
+
         aircraft_id = f"I{self._next_in_id}"
         self._next_in_id += 1
 
@@ -208,7 +182,8 @@ class SimulationEngine:
         )
 
     def make_outbound_aircraft(self, now: int):
-        from backend.aircraft import Aircraft
+        from aircraft import Aircraft
+
         aircraft_id = f"O{self._next_out_id}"
         self._next_out_id += 1
 
@@ -216,6 +191,6 @@ class SimulationEngine:
             aircraft_id=aircraft_id,
             flight_type="OUTBOUND",
             scheduledTime=now,
-            fuelRemaining=0, # Fixed outbound fuel (usually irrelevant or max)
+            fuelRemaining=0,
             emergency=None,
         )

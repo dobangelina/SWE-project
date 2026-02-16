@@ -1,17 +1,17 @@
 # simulation_params.py
 from __future__ import annotations
 from dataclasses import dataclass
+from __future__ import annotations
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
 class SimulationParams:
-
-    # Define data types:
     num_runways: int
     inbound_rate_per_hour: float
     outbound_rate_per_hour: float
 
-    # Stochastic assumptions (minutes):
+    # Stochastic assumptions (minutes)
     arrival_stddev_min: int = 5
     departure_stddev_min: int = 5
 
@@ -20,7 +20,8 @@ class SimulationParams:
     fuel_min_min: int = 10
     fuel_initial_min_min: int = 20
     fuel_initial_max_min: int = 60
-    # Emergency events per tick (counts, not probabilities)
+
+    # Emergencies per tick (count)
     emergencies_per_tick: int = 0
 
     # distribution of emergency types (weights)
@@ -29,7 +30,7 @@ class SimulationParams:
     p_fuel_emergency: float = 0.2
 
     # Engine timing
-    tick_size_min: int = 1                  # 1-minute discrete tick
+    tick_size_min: int = 1  # 1-minute discrete tick
 
     def validate(self) -> None:
         if not (1 <= self.num_runways <= 10):
@@ -43,8 +44,9 @@ class SimulationParams:
         if self.tick_size_min <= 0:
             raise ValueError("tick_size_min must be > 0.")
 
-        if self.arrival_stddev_min <= 0 or self.departure_stddev_min <= 0:
-            raise ValueError("stddev minutes must be > 0.")
+        # allow 0 to disable noise
+        if self.arrival_stddev_min < 0 or self.departure_stddev_min < 0:
+            raise ValueError("stddev minutes must be >= 0.")
 
         if self.max_takeoff_wait_min <= 0:
             raise ValueError("max_takeoff_wait_min must be > 0.")
@@ -55,10 +57,10 @@ class SimulationParams:
             raise ValueError("fuel_initial_min_min must be <= fuel_initial_max_min.")
         if self.fuel_min_min >= self.fuel_initial_min_min:
             raise ValueError("fuel_min_min must be < fuel_initial_min_min.")
+
         if self.emergencies_per_tick < 0:
             raise ValueError("emergencies_per_tick must be >= 0.")
+
         s = self.p_mechanical_failure + self.p_passenger_illness + self.p_fuel_emergency
         if abs(s - 1.0) > 1e-9:
-            raise ValueError("Emergency probabilities must sum to 1.0.")
-
             raise ValueError("Emergency probabilities must sum to 1.0.")
