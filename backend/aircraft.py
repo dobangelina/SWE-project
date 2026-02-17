@@ -30,11 +30,11 @@ class Aircraft:
 
         # Cosmetic / UI fields
         icao_code = [
-            "Boeing", "Airbus", "RYANAIR", "Speedbird", "Emirates",
-            "EASY", "Oceanic", "Virgin", "Delta", "United"
+            "Boeing ", "Airbus ", "RYANAIR ", "Speedbird ", "Emirates ",
+            "EASY ", "Oceanic ", "Virgin ", "Delta ", "United "
         ]
-        # self.callsign = f"{random.choice(icao_code)}{random.randint(100, 999)}"
-        # self.operator = random.choice(string.ascii_uppercase) + random.choice(string.ascii_uppercase)
+        self.callsign = f"{random.choice(icao_code)}{random.randint(100, 999)}"
+        self.operator = random.choice(string.ascii_uppercase) + random.choice(string.ascii_uppercase)
         self.ground_speed = random.randint(300, 600)
 
         if self.type == "INBOUND":
