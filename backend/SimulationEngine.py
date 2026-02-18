@@ -194,3 +194,21 @@ class SimulationEngine:
             fuelRemaining=0,
             emergency=None,
         )
+
+    def get_time(self) -> int:
+        return self.current_time  # SimTime in minutes
+
+    def get_params(self):
+        return self.params
+
+    def get_report(self) -> dict:
+        return self.stats.report()
+
+    def get_holding_queue(self):
+        return self.airport.holding.to_list()
+
+    def get_takeoff_queue(self):
+        return self.airport.takeoff.to_list()
+
+    def get_runways(self):
+        return self.airport.runways
