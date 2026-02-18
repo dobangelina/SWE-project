@@ -60,9 +60,15 @@ class Aircraft:
             getattr(e, "passenger_illness", False) or
             getattr(e, "fuel_emergency", False)
         )
-        
-    def priority(self, time: int) -> int: #What is this for? Is this when we want to assign the priority for the aircraft before pushing it into the queue?
-        return
-    
+
+    def priority(self, time: int) -> int:
+        """
+        Lower value = higher priority.
+        Emergency aircraft must always come first.
+        But change if you want spectrum
+        Vadim
+        """
+        return 0 if self.isEmergency() else 1
+
     def consumeFuel(self, data: int) -> None:
         return

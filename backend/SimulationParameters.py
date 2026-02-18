@@ -32,6 +32,7 @@ class SimulationParams:
     # Engine timing
     tick_size_min: int = 1  # 1-minute discrete tick
 
+
     def validate(self) -> None:
         if not (1 <= self.num_runways <= 10):
             raise ValueError("num_runways must be in [1, 10].")
