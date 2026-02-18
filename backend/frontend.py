@@ -57,7 +57,7 @@ def create_ui():
     root.bind("p", lambda x: pause())
     root.bind("S", lambda x: create_simulation_settings())
     root.bind("s", lambda x: create_simulation_settings())
-    root.bind("<Tab>", lambda x: create_simulation_settings())
+    root.bind("<Tab>", lambda x: create_statistics())
     root.bind("R", lambda x: reset_simulation())
     root.bind("r", lambda x: reset_simulation())
     #root.resizable(False, False)
