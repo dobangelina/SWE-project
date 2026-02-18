@@ -4,7 +4,7 @@ class Runway:
     def __init__(self, runway_id, runway_mode, runway_status) -> None:
         self.id = runway_id
         self.mode = runway_mode #either string MIXED, LANDING, or TAKEOFF
-        self.status = runway_status
+        self.status = runway_status #AVAILABLE or OCCUPIED
         self.occupiedUntil = 0
         self.currentAircraft = None
         self.length = random.randint(2000,4000)

@@ -1,5 +1,6 @@
 from typing import List
 
+from aircraft import Aircraft
 from Queues import HoldingQueue, TakeOffQueue
 from runway import Runway
 from SimulationEngine import SimTime
@@ -19,13 +20,38 @@ class Airport:
         self.takeoff.enqueue(aircraft, now)
 
     def assignLanding(time: SimTime, self) -> None:
-        return
+        plane_holding : Aircraft = self.holding.dequeue()
+        #found = False
+        for runway in self.runways:
+            if runway.isAvailable() and runway.canLand():
+                runway.assign(plane_holding, "LANDING", time)    
+                runway.status = "OCCUPIED"
+                break
+        # if not found:
+        #     print("Not assigned for this tick")
     
     def assignTakeOff(time: SimTime, self) -> None:
-        return
+        plane_takeoff : Aircraft = self.takeoff.dequeue()
+        # found = False
+        for runway in self.runways:
+            if runway.isAvailable() and runway.canTakeoff():
+                runway.assign(plane_takeoff, "TAKEOFF", time)
+                runway.status = "OCCUPIED"
+                break
+        # if not found:
+        #     print("Not assigned for this tick")
     
     def getEligibleRunways(self, mode: str) -> List[Runway]:
-        return
-    
-    def updateRunways(time: SimTime) -> None:
-        return
+        eligible_list = []
+        for runway in self.runways:
+            if runway.mode == mode:
+                eligible_list.append(runway)
+        return eligible_list
+        
+    #This method updates the runways so that the runways whose time has passed can be freed
+    def updateRunways(self,time: SimTime) -> None:
+        for runway in self.runways:
+            if runway.occupiedUntil < time:
+                runway.status = "AVAILABLE"
+                runway.occupiedUntil = 0
+                runway.currentAircraft = None

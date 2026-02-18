@@ -16,9 +16,7 @@ class Aircraft:
     EmergencyType is CREATED by SimulationEngine and injected here.
     """
 
-    def __init__(self, aircraft_id: str, flight_type: str, scheduledTime: int, fuelRemaining: int,
-                 *, emergency: Optional[EmergencyType] = None, altitude: int = 0, 
-                 enteredHoldingAt: Optional[int] = None, joinedTakeoffQueueAt: Optional[int] = None):
+    def __init__(self, aircraft_id: str, flight_type: str, scheduledTime: int, fuelRemaining: int,*, emergency: Optional[EmergencyType] = None, altitude: int = 0, enteredHoldingAt: Optional[int] = None, joinedTakeoffQueueAt: Optional[int] = None):
         
         self.id = aircraft_id
         self.type = flight_type #a string that will either be INBOUND or OUTBOUND
@@ -32,11 +30,11 @@ class Aircraft:
 
         # Cosmetic / UI fields
         icao_code = [
-            "Boeing", "Airbus", "RYANAIR", "Speedbird", "Emirates",
-            "EASY", "Oceanic", "Virgin", "Delta", "United"
+            "Boeing ", "Airbus ", "RYANAIR ", "Speedbird ", "Emirates ",
+            "EASY ", "Oceanic ", "Virgin ", "Delta ", "United "
         ]
-        # self.callsign = f"{random.choice(icao_code)}{random.randint(100, 999)}"
-        # self.operator = random.choice(string.ascii_uppercase) + random.choice(string.ascii_uppercase)
+        self.callsign = f"{random.choice(icao_code)}{random.randint(100, 999)}"
+        self.operator = random.choice(string.ascii_uppercase) + random.choice(string.ascii_uppercase)
         self.ground_speed = random.randint(300, 600)
 
         if self.type == "INBOUND":
