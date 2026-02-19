@@ -159,8 +159,30 @@ class SimulationEngine:
                 self.airport.handleOutbound(a, t)
 
     def update_constraints(self, now: int, dt: int) -> None:
-
-        pass
+        """
+        Placeholder for fuel burn logic, etc.
+        """
+        temp_holding = []
+        
+        # Pulls planes out of the holding queue
+        while self.airport.holding.size() > 0:
+            temp_holding.append(self.airport.holding.dequeue())
+            
+        for aircraft in temp_holding:
+            aircraft.fuelRemaining -= dt
+            
+            if aircraft.fuelRemaining <= 0:
+                self.stats.record_diversion(aircraft, now)
+                continue  
+                
+            if aircraft.fuelRemaining <= self.params.fuel_min_min:
+                if aircraft.emergency is None:
+                    aircraft.emergency = EmergencyType(fuel_emergency=True)
+                else:
+                    aircraft.emergency.fuel_emergency = True
+                    
+            # Put the aircraft back into the holding queue
+            self.airport.holding.enqueue(aircraft, aircraft.enteredHoldingAt)
 
     def make_inbound_aircraft(self, now: int):
         from aircraft import Aircraft  # everything is in backend
