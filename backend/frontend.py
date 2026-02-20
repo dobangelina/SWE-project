@@ -26,6 +26,7 @@ from statistics import Statistics
 
 def create_ui():
     root = tk.Tk()
+    root.resizable(False, False)
 
     # Dimensions
     window_w = root.winfo_screenwidth() - 100
