@@ -3,7 +3,7 @@ import random
 class Runway:
     def __init__(self, runway_id, runway_mode, runway_status) -> None:
         self.id = runway_id
-        self.mode = runway_mode              # capability (DO NOT CHANGE)
+        self.mode = runway_mode              # capability 
         self.status = runway_status
         self.currentOperation = None         # "LANDING" or "TAKEOFF"
         self.occupiedUntil = 0
