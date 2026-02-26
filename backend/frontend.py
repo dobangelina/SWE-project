@@ -163,7 +163,7 @@ def create_ui():
         widget_frame.columnconfigure(0, weight=1)
         widget_frame.columnconfigure(1, weight=1)
 
-        # Create the 6 text labels (using placeholders for the right side)
+        # Create the 6 text labels
         tl = tk.Label(widget_frame, text=plane.callsign, bg=lightest_grey, font=("Arial", 13, "bold"), anchor="w")
         tr = tk.Label(widget_frame, text="[Emergency]", bg=lightest_grey, fg=emergency_text_color, font=("Arial", 11, "bold"), anchor="e")
         
