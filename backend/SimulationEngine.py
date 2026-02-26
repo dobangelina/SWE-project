@@ -161,18 +161,24 @@ class SimulationEngine:
         """
         Placeholder for fuel burn logic, etc.
         """
+        # Creates temporary list to hold aircraft while their states are updated
         temp_holding = []
 
+        # Pulls all aircraft out of the holding queue, preserving their internal order
         while self.airport.holding.size() > 0:
             item = self.airport.holding.dequeue_with_order()
             if item is not None:
                 temp_holding.append(item)
 
+        # Process each aircraft to update fuel and check thresholds
         for _, _, order, aircraft in temp_holding:
+            # Reduce the aircraft's fuel based on the time passed this tick
             aircraft.consumeFuel(dt)
 
-            # Declare fuel emergency BEFORE diversion
+            # Declare fuel emergency before diversion
+            # Check if fuel has dropped to the emergency threshold
             if aircraft.fuelRemaining <= self.params.fuel_emergency_min:
+                # Assign a new fuel emergency or append it to an existing emergency
                 if aircraft.emergency is None:
                     aircraft.emergency = EmergencyType(fuel_emergency=True)
                 else:
@@ -180,22 +186,30 @@ class SimulationEngine:
 
 
             # Divert only if fuel critically low
+            # If fuel hits the absolute minimum, the plane must leave the airspace
             if aircraft.fuelRemaining <= self.params.fuel_min_min:
+                # Log the diversion for statistics
                 self.stats.record_diversion(aircraft, now)
-                continue  # do NOT reinsert
+                continue  # do not re-enqueue the aircraft
+            
+            # Put the aircraft back into the queue with its updated priority and original entry time
             self.airport.holding.enqueue_with_order(aircraft, aircraft.enteredHoldingAt, order)
 
+    # Factory method to create a new arriving aircraft
     def make_inbound_aircraft(self, now: int):
         from backend.aircraft import Aircraft
 
+        # Generate a unique ID for the inbound flight and increment the counter
         aircraft_id = f"I{self._next_in_id}"
         self._next_in_id += 1
 
+        # Assigns  random initial fuel amount within the configured limits
         fuel = self._rng.randint(
             self.params.fuel_initial_min_min,
             self.params.fuel_initial_max_min,
         )
 
+        # Creates and returns the Aircraft object
         return Aircraft(
             aircraft_id=aircraft_id,
             flight_type="INBOUND",
@@ -204,12 +218,15 @@ class SimulationEngine:
             emergency=None,
         )
 
+    # Factory method to create a new departing aircraft
     def make_outbound_aircraft(self, now: int):
         from backend.aircraft import Aircraft
 
+        # Generates a unique ID for the outbound flight and increment the counter
         aircraft_id = f"O{self._next_out_id}"
         self._next_out_id += 1
 
+        # Creates and returns the Aircraft object (fuel is 0 as it is not tracked for departures)
         return Aircraft(
             aircraft_id=aircraft_id,
             flight_type="OUTBOUND",
@@ -217,7 +234,6 @@ class SimulationEngine:
             fuelRemaining=0,
             emergency=None,
         )
-
     def get_time(self) -> int:
         return self.current_time  # SimTime in minutes
 
