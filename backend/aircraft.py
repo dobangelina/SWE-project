@@ -2,7 +2,7 @@ import random
 import string
 from dataclasses import dataclass
 from typing import Optional
-from SimulationEngine import EmergencyType
+from .SimulationEngine import EmergencyType
 # Defined here to avoid circular import from SimulationEngine
 
 

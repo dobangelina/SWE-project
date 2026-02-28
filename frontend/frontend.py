@@ -3,13 +3,10 @@
 # things still TODO:
 # Angelina this week:
 # link with backend + remove testing code
-# aircraft failure warning signs
 # pause
 # reset simulation 
 # time
 # making statistic outputs look good
-# additional info on aircraft widgets 
-# mouse/trackpad scrolling
 
 # Will:
 # progress bars - DONE
@@ -18,9 +15,9 @@
 # button images - ^^ Doing next
 
 import tkinter as tk
-from aircraft import Aircraft
-from runway import Runway
-from statistics import Statistics
+from backend.aircraft import Aircraft
+from backend.runway import Runway
+from backend.statistics import Statistics
 from tkinter import ttk # For Progress Bars
 #from SimulationParameters import SimulationParams
 
@@ -163,9 +160,19 @@ def create_ui():
         widget_frame.columnconfigure(0, weight=1)
         widget_frame.columnconfigure(1, weight=1)
 
+        # Generate label for emergency
+        if plane.emergency == None: 
+            emergency_label = "" 
+        elif plane.emergency.mechanical_failure:
+            emergency_label = "Mechanical Failure"
+        elif plane.emergency.passanger_illness:
+            emergency_label = "Passanger Illness"
+        elif plane.emergency.fuel_emergency:
+            emergency_label = "Fuel Emergency"
+
         # Create the 6 text labels
         tl = tk.Label(widget_frame, text=plane.callsign, bg=lightest_grey, font=("Arial", 13, "bold"), anchor="w")
-        tr = tk.Label(widget_frame, text="[Emergency]", bg=lightest_grey, fg=emergency_text_color, font=("Arial", 11, "bold"), anchor="e")
+        tr = tk.Label(widget_frame, text= emergency_label, bg=lightest_grey, fg=emergency_text_color, font=("Arial", 11, "bold"), anchor="e")
         
         ml = tk.Label(widget_frame, text=plane.operator, bg=lightest_grey, font=("Arial", 11), anchor="w")
         mr = tk.Label(widget_frame, text="", bg=lightest_grey, font=("Arial", 5), anchor="e")
@@ -219,7 +226,7 @@ def create_ui():
             direction = "Landing" if runway.currentAircraft.type == "INBOUND" else "Taking off"
             runway_airplane_readable = f"{runway.currentAircraft.callsign} - {direction}"
 
-        emergency_readable = "Fire"
+        emergency_readable = ""
 
         # Main container frame
         widget_frame = tk.Frame(runway_column, bg=lightest_grey, padx=5, pady=5, cursor="hand2")
@@ -257,8 +264,6 @@ def create_ui():
 
         tl.grid(row=0, column=0, sticky="w")
         bl.grid(row=2, column=0, sticky="w")
-
-
 
         # Other Right Side Label
         br = tk.Label(widget_frame, text=emergency_readable, bg=lightest_grey, fg=emergency_text_color, font=("Arial", 12, "bold"), anchor="e")
@@ -304,8 +309,10 @@ def create_ui():
         info_row(info_frame, "Runway Name: ", "Runway " + str(runway.id), 0)
         info_row(info_frame, "Operating Mode: ", runway.mode, 1)
         info_row(info_frame, "Status: ", runway.status, 2)
-        info_row(info_frame, "Time Idle", "TODO: PLACEHOLDER", 3) #testing code: should pull from simulation
-        info_row(info_frame, "Landing: Take off Ratio ", "TODO: PLACEHOLDER", 4) #testing code: should pull from simulation
+        info_row(info_frame, "Length: ", str(runway.length) + " m", 3)
+        info_row(info_frame, "Bearing: ", runway.getBearingString(), 4)
+        info_row(info_frame, "Time Idle", "TODO: PLACEHOLDER", 5) #testing code: should pull from simulation
+        info_row(info_frame, "Landing: Take off Ratio ", "TODO: PLACEHOLDER", 6) #testing code: should pull from simulation
 
     # Function to generate a row of the display info
     def info_row(info_frame, label, attribute, row):
@@ -416,10 +423,11 @@ def create_ui():
         speed_multiplier = input_row(info_frame, "Simulation speed multiplier: ", 3, 1.0)
         max_wait_time = input_row(info_frame, "Maximum take off wait time (minutes): ", 4, 30.0)
         min_fuel_level = input_row(info_frame, "Minimum fuel levels (minutes' worth): ", 5, 10.0)
+        rate_of_emergencies = input_row(info_frame, "Rate of emergencies: ", 6, 0.3)
 
         apply_changes_button = tk.Button(info_frame, font=("Arial", 13, "bold"), text="Apply Changes", bg="white", relief="solid", justify= "left", command=lambda: 
-                                         apply_changes(number_of_runways.get(), inbound_flow.get(), outbound_flow.get(), speed_multiplier.get(), max_wait_time.get(), min_fuel_level.get()))
-        apply_changes_button.grid(column = 0, row = 6, columnspan=2, padx = 10, pady=20)
+                                         apply_changes(number_of_runways.get(), inbound_flow.get(), outbound_flow.get(), speed_multiplier.get(), max_wait_time.get(), min_fuel_level.get(), rate_of_emergencies.get()))
+        apply_changes_button.grid(column = 0, row = 7, columnspan=2, padx = 10, pady=20)
 
     # Function that generates the statistics box with data pulled from the statistics class.
     def create_statistics():

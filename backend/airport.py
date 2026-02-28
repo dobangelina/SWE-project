@@ -1,9 +1,9 @@
 from typing import List
 
-from backend.aircraft import Aircraft
-from backend.queues import HoldingQueue, TakeOffQueue
-from backend.runway import Runway
-from backend.SimulationEngine import SimTime
+#from .aircraft import aircraft
+from .queues import HoldingQueue, TakeOffQueue
+from .runway import Runway
+from .SimulationEngine import SimTime
 
 
 # Other classes are yet to be made but the airport class needs to inherit from them

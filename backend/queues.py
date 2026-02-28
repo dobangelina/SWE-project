@@ -1,9 +1,6 @@
-from backend.aircraft import Aircraft
+from .aircraft import Aircraft
 from collections import deque #(FIFO Queue for Take-Off)
 from queue import PriorityQueue #(Priority queue for Holding)
-
-
-
 
 class HoldingQueue:
     #class constructor initializing attributes
