@@ -8,6 +8,7 @@ from backend.queues import HoldingQueue, TakeOffQueue
 from backend.runway import Runway
 from backend.airport import Airport
 from backend.aircraft import Aircraft
+from frontend.frontend import create_ui
 
 
 def fmt_emergency(a: Aircraft) -> str:
@@ -177,4 +178,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    #create_ui() #testing creating the UI in main.py, it works
     main()
