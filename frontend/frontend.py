@@ -80,6 +80,7 @@ def create_ui(engine):
 
     holding_plane_widgets = {}
     takeoff_plane_widgets = {}
+    runway_widgets = {}
     
     # Helper function to create sections with inset rectangles
     def create_section(parent, x, y, w, h, name, title = True, scrollable = False):
@@ -301,7 +302,50 @@ def create_ui(engine):
         widget_frame.bind("<Button-1>", on_click)
         for label in (tl, bl, br):
             label.bind("<Button-1>", on_click)
+
+        return { "frame": widget_frame, "tl": tl, "bl": bl, "br": br, "progress": progress } # Part of the "flashing" fix
        
+    def update_runway_widget(widget, runway):
+        if runway.mode == "LANDING":
+            runway_title_readable = "Runway "+ str(runway.id) + " - Landing only"
+        elif runway.mode == "TAKEOFF":
+            runway_title_readable = "Runway "+ str(runway.id) + " - Take off only"
+        else:
+            runway_title_readable = "Runway "+ str(runway.id) + " - Mixed Use"
+
+        if runway.currentAircraft == None:
+            runway_airplane_readable = "Not currently in use"
+        else:
+            direction = "Landing" if runway.currentAircraft.type == "INBOUND" else "Taking off"
+            runway_airplane_readable = f"{runway.currentAircraft.callsign} - {direction}"
+
+        # Update the existing text instead of destroying the widget
+        widget["tl"].config(text=runway_title_readable)
+        widget["bl"].config(text=runway_airplane_readable)
+
+        # Update the progress bar style
+        bar_style = "Orange.Horizontal.TProgressbar" if runway.currentOperation == "LANDING" else "Green.Horizontal.TProgressbar"
+        widget["progress"].config(style=bar_style)
+
+    def update_runway_queue(queue, frame, widget_dict):
+        current_ids = set()
+
+        for runway in queue:
+            rid = runway.id
+            current_ids.add(rid)
+
+            if rid not in widget_dict:
+                widget_dict[rid] = create_runway_widget(frame, runway)
+
+            update_runway_widget(widget_dict[rid], runway)
+
+        # Remove any runways that no longer exist
+        for rid in list(widget_dict):
+            if rid not in current_ids:
+                widget_dict[rid]["frame"].destroy()
+                del widget_dict[rid]
+    
+
     # Creates the widget which shows all the information about the airplane selected
     def airplane_info_widget(display_frame, airplane):
         # Frame the information is shown in
@@ -566,7 +610,7 @@ def create_ui(engine):
 
         return takeoff_queue_frame, holding_queue_frame, display_area_frame, display_info_frame, runway_queue_frame, time
 
-    def reload_widgets(queue, frame, runway = False):
+    def reload_widgets(queue, frame, runway = False): # NOT USED ANYMORE
         for widget in frame.winfo_children():
             widget.destroy()
         for x in queue:
@@ -595,7 +639,8 @@ def create_ui(engine):
     def update_ui():
         update_plane_queue(engine.get_holding_queue(), holding_queue_frame, holding_plane_widgets)
         update_plane_queue(engine.get_takeoff_queue(), takeoff_queue_frame, takeoff_plane_widgets)
-        reload_widgets(engine.get_runways(), runway_queue_frame, True)
+        update_runway_queue(engine.get_runways(), runway_queue_frame, runway_widgets)
+        
         time.config(text=f"Tick: {engine.get_time()}")
 
     def simulation_tick():
