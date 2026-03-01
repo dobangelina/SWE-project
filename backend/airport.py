@@ -24,36 +24,40 @@ class Airport:
         self.takeoff.enqueue(aircraft, now)
 
     def assignLanding(self, time: SimTime) -> None:
-        plane_holding = self.holding.dequeue()
-        if plane_holding is None:
-            return
-
+        """
+        Assign as many inbound aircraft as possible to eligible available runways.
+        """
         for runway in self.runways:
-            if runway.isAvailable() and runway.canLand():
-                duration = 1  # minutes (or make this a parameter later)
-                runway.assign(plane_holding, "LANDING", time, duration)
-                runway.status = "OCCUPIED"
+            if not (runway.isAvailable() and runway.canLand()):
+                continue
 
-                # statistics hooks
-                self.stats.record_landing(plane_holding, time)
-                self.stats.record_runway_busy(runway, duration)
-                return
+            plane = self.holding.dequeue()
+            if plane is None:
+                return  # no more inbound aircraft
+
+            duration = 1
+            runway.assign(plane, "LANDING", time, duration)
+            runway.status = "OCCUPIED"
+            self.stats.record_landing(plane, time)
+            self.stats.record_runway_busy(runway, duration)
 
     def assignTakeOff(self, time: SimTime) -> None:
-        plane_takeoff = self.takeoff.dequeue()
-        if plane_takeoff is None:
-            return
-
+        """
+        Assign as many outbound aircraft as possible to eligible available runways.
+        """
         for runway in self.runways:
-            if runway.isAvailable() and runway.canTakeOff():
-                duration = 1
-                runway.assign(plane_takeoff, "TAKEOFF", time, duration)
-                runway.status = "OCCUPIED"
+            if not (runway.isAvailable() and runway.canTakeOff()):
+                continue
 
-                # statistics hooks
-                self.stats.record_takeoff(plane_takeoff, time)
-                self.stats.record_runway_busy(runway, duration)
-                return
+            plane = self.takeoff.dequeue()
+            if plane is None:
+                return  # no more outbound aircraft
+
+            duration = 1
+            runway.assign(plane, "TAKEOFF", time, duration)
+            runway.status = "OCCUPIED"
+            self.stats.record_takeoff(plane, time)
+            self.stats.record_runway_busy(runway, duration)
 
     
     def getEligibleRunways(self, mode: str) -> List[Runway]:
