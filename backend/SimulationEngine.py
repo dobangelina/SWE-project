@@ -2,6 +2,8 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass
 from typing import List, Tuple, Optional, Any
+from .aircraft import Aircraft
+
 
 SimTime = int  # for compatibility across backend modules
 
@@ -197,7 +199,6 @@ class SimulationEngine:
 
     # Factory method to create a new arriving aircraft
     def make_inbound_aircraft(self, now: int):
-        from backend.aircraft import Aircraft
 
         # Generate a unique ID for the inbound flight and increment the counter
         aircraft_id = f"I{self._next_in_id}"
@@ -220,7 +221,6 @@ class SimulationEngine:
 
     # Factory method to create a new departing aircraft
     def make_outbound_aircraft(self, now: int):
-        from backend.aircraft import Aircraft
 
         # Generates a unique ID for the outbound flight and increment the counter
         aircraft_id = f"O{self._next_out_id}"

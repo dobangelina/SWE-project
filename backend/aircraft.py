@@ -2,9 +2,14 @@ import random
 import string
 from dataclasses import dataclass
 from typing import Optional
-from .SimulationEngine import EmergencyType
+# from .SimulationEngine import EmergencyType
 # Defined here to avoid circular import from SimulationEngine
 
+@dataclass
+class EmergencyType:
+    mechanical_failure: bool = False
+    passenger_illness: bool = False
+    fuel_emergency: bool = False
 
 class Aircraft:
     """
@@ -48,7 +53,7 @@ class Aircraft:
         e = self.emergency
         if e is None:
             return False
-        return e.mechanical_failure or e.passenger_illness or e.fuel_emergency
+        return e.mechanical_failure or e.passenger_illness or e.fuel_emergency 
 
     def consumeFuel(self, amount: int) -> None:
         self.fuelRemaining = max(0, self.fuelRemaining - int(amount))

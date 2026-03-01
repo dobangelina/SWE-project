@@ -4,11 +4,12 @@ from typing import List
 from .queues import HoldingQueue, TakeOffQueue
 from .runway import Runway
 from .SimulationEngine import SimTime
+from .statistics import Statistics
 
 
 # Other classes are yet to be made but the airport class needs to inherit from them
 class Airport:
-    def __init__(self, runways: list[Runway], holding: HoldingQueue, takeoff: TakeOffQueue,stats):
+    def __init__(self, runways: list[Runway], holding: HoldingQueue, takeoff: TakeOffQueue, stats: Statistics):
         self.runways = runways
         self.holding = holding
         self.takeoff = takeoff
