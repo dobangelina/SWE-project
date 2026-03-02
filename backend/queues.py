@@ -35,6 +35,9 @@ class HoldingQueue:
         #log the time aircraft entered holding queue
         a.enteredHoldingAt = time
 
+        # Ensure 1000ft vertical separation for aircraft in the holding pattern
+        a.altitude = (self.size() + 1) * 1000
+
     def enqueue_with_order(self, a: Aircraft, time: int, order: int) -> None:
         emergency_priority = 0 if a.isEmergency() else 1
         is_fuel_emergency = bool(a.emergency and getattr(a.emergency, "fuel_emergency", False))
