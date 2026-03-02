@@ -2,17 +2,10 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass
 from typing import List, Tuple, Optional, Any
-from .aircraft import Aircraft
+from .aircraft import Aircraft, EmergencyType
 
 
 SimTime = int  # for compatibility across backend modules
-
-
-@dataclass
-class EmergencyType:
-    mechanical_failure: bool = False
-    passenger_illness: bool = False
-    fuel_emergency: bool = False
 
 @dataclass
 class SimulationEngine:

@@ -17,10 +17,15 @@ class HoldingQueue:
 
     #adds a new aircraft to the queue, returns None
     def enqueue(self, a: Aircraft, time: int) -> None:
-        # Primary: emergencies before non-emergencies
-        emergency_priority = 0 if a.isEmergency() else 1
 
         is_fuel_emergency = bool(a.emergency and getattr(a.emergency, "fuel_emergency", False))
+        if a.isEmergency():
+            if is_fuel_emergency:
+                emergency_priority = 0  # fuel emergency
+            else:
+                emergency_priority = 1  # other emergency
+        else:
+            emergency_priority = 2  # non-emergency
         fuel_key = a.fuelRemaining if is_fuel_emergency else 10 ** 9
 
         self.items.put((emergency_priority,fuel_key, self.arrival_order, a))
