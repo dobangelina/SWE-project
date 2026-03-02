@@ -50,7 +50,7 @@ class HoldingQueue:
 
     
     #removes the top aircraft from the queue and returns it (None if empty)
-    def dequeue(self) -> Aircraft | None:
+    def dequeue(self) -> Aircraft:
         #check if queue empty return None
         if self.items.empty():
             return None
@@ -59,7 +59,7 @@ class HoldingQueue:
         return aircraft_obj
     
     #returns the aircraft at the top of the queue (None if empty)
-    def peek(self) -> Aircraft | None:
+    def peek(self) -> Aircraft:
         #check if queue empty return None
         if self.items.empty():
             return None
@@ -87,14 +87,14 @@ class TakeOffQueue:
         #log the time aircraft joined take-off queue
         a.joinedTakeoffQueueAt = time
 
-    def dequeue(self) -> Aircraft | None:
+    def dequeue(self) -> Aircraft:
         #check if queue empty return None
         if self.isEmpty():
             return None
         
         return self.items.popleft()
     
-    def peek(self) -> Aircraft | None:
+    def peek(self) -> Aircraft:
         if self.isEmpty():
             return None
         return self.items[0]
@@ -109,3 +109,4 @@ class TakeOffQueue:
     def to_list(self):
         # For UI snapshot / debugging
         return list(self.items)
+
