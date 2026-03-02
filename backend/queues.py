@@ -20,7 +20,6 @@ class HoldingQueue:
         # Primary: emergencies before non-emergencies
         emergency_priority = 0 if a.isEmergency() else 1
 
-        # Secondary: ONLY for fuel-emergency aircraft -> lower fuelRemaining first
         is_fuel_emergency = bool(a.emergency and getattr(a.emergency, "fuel_emergency", False))
         fuel_key = a.fuelRemaining if is_fuel_emergency else 10 ** 9
 
