@@ -109,3 +109,4 @@ class TakeOffQueue:
     def to_list(self):
         # For UI snapshot / debugging
         return list(self.items)
+
