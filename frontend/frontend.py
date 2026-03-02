@@ -366,6 +366,7 @@ class AirportUI:
             for r in runways_to_flag:
                 if r not in self.pending_runway_removals:
                     self.pending_runway_removals.append(r)
+                    r.status = "Closed"
             self.engine.airport.runways = current_runways
         
         self.update_ui()
@@ -476,7 +477,7 @@ class AirportUI:
 
         # Remove any flagged runways that have now finished their last operation.
         for r in self.pending_runway_removals[:]:
-            if r.currentAircraft is None:
+            if r.currentAircraft is None or r.occupancy == "FREE":
                 current_list = list(self.engine.airport.runways)
                 if r in current_list:
                     current_list.remove(r)

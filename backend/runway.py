@@ -12,8 +12,8 @@ class Runway:
         self.length = random.randint(2000,4000)
         self.bearing = random.randint(1,36)
 
-    def isAvailable(self) -> bool: 
-        return (self.currentAircraft == None) and (self.status == "AVAILABLE")
+    def isAvailable(self):
+        return self.occupancy == "FREE" and self.status == "AVAILABLE"
 
     def assign(self, aircraft, operationMode, time: int, duration: int = 1) -> None:
         self.currentAircraft = aircraft
