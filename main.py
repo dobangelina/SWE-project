@@ -18,7 +18,7 @@ def fmt_emergency(a: Aircraft) -> str:
     flags = []
     if e.fuel_emergency:
         flags.append("FUEL")
-    if e.mechanical_failure:
+    if e.mechanical_flure:
         flags.append("MECH")
     if e.passenger_illness:
         flags.append("ILL")

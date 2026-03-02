@@ -36,13 +36,13 @@ class AirportUI:
         self.holding_plane_widgets = {}
         self.takeoff_plane_widgets = {}
         self.runway_widgets = {}
-        
+
         self.setup_window()
         self.setup_styles()
-        self.build_interface()
         self.bind_keys()
-        
-        # Open the settings dialog immediately so the user can configure before starting.
+
+        # UI not built yet — settings first
+        self.ui_built = False
         self.open_simulation_settings()
         
     def setup_window(self):
@@ -222,13 +222,14 @@ class AirportUI:
             
         # Pause while the user adjusts settings so nothing runs in the background.
         self.toggle_pause(force_pause=True)
-        
+
         self.settings_win = tk.Toplevel(self.root)
         self.settings_win.title("Simulation Settings")
         self.settings_win.geometry("450x450")
         self.settings_win.configure(bg=self.dark_grey)
         self.settings_win.grab_set()  # Block interaction with the main window.
         self.settings_win.resizable(False, False)
+        self.settings_win.protocol("WM_DELETE_WINDOW", self.root.destroy)
         
         container = tk.Frame(self.settings_win, bg=self.lightest_grey, padx=20, pady=20)
         container.pack(fill="both", expand=True, padx=10, pady=10)
@@ -270,7 +271,21 @@ class AirportUI:
                     float(entries["Min fuel levels (mins):"].get()),
                     float(entries["Rate of emergencies:"].get())
                 )
+
+
+                # Build the simulation UI only after settings are applied
+                if not getattr(self, "ui_built", False):
+                    self.build_interface()
+                    self.ui_built = True
+
+                self.update_ui()
+
                 self.settings_win.destroy()
+
+                self.root.deiconify()
+                self.root.lift()
+                self.root.focus_force()
+
                 self.toggle_pause(force_play=True)
             except ValueError:
                 # Show an inline error rather than crashing if the user typed non-numbers.
@@ -301,10 +316,26 @@ class AirportUI:
         
         # Pull a snapshot of stats from the engine at the moment the dialog opens.
         report_data = self.engine.get_report()
-        
+
         def add_stat(row, label, val):
-            tk.Label(container, text=label, bg=self.lightest_grey, font=("Arial", 11, "bold")).grid(row=row, column=0, sticky="w", pady=2)
-            tk.Label(container, text=str(val), bg=self.lightest_grey, font=("Arial", 11)).grid(row=row, column=1, sticky="e", pady=2)
+            if isinstance(val, float):
+                display = f"{val:.2f}"
+            else:
+                display = str(val)
+
+            tk.Label(
+                container,
+                text=label,
+                bg=self.lightest_grey,
+                font=("Arial", 11, "bold")
+            ).grid(row=row, column=0, sticky="w", pady=2)
+
+            tk.Label(
+                container,
+                text=display,
+                bg=self.lightest_grey,
+                font=("Arial", 11)
+            ).grid(row=row, column=1, sticky="e", pady=2)
             
         add_stat(1, "Max holding queue size:", report_data.get("maxHoldingQueue", 0))
         add_stat(2, "Avg holding queue size:", report_data.get("avgHoldingQueue", 0))
@@ -365,8 +396,9 @@ class AirportUI:
                     self.pending_runway_removals.append(r)
                     r.status = "Closed"
             self.engine.airport.runways = current_runways
-        
-        self.update_ui()
+
+        if getattr(self, "ui_built", False):
+            self.update_ui()
 
     # --- Core Simulation Loop ---
 
@@ -841,5 +873,6 @@ class AirportUI:
 
 def create_ui(engine):
     root = tk.Tk()
+    root.withdraw()  # hide main simulation window until settings applied
     app = AirportUI(root, engine)
     root.mainloop()
