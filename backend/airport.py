@@ -50,6 +50,7 @@ class Airport:
             self.stats.record_landing(plane, time)
             self.stats.record_runway_busy(runway, duration)
 
+
     def assignTakeOff(self, time: SimTime) -> None:
         """
         Assign as many outbound aircraft as possible to eligible available runways.
@@ -59,11 +60,11 @@ class Airport:
                 continue
 
             plane = self.takeoff.dequeue()
-            if plane is None: return  
+            if plane is None: return
 
             duration = 3
             runway.assign(plane, "TAKEOFF", time, duration)
-            runway.startTime = time # Needs to store Start Time 
+            runway.startTime = time # Needs to store Start Time
             runway.duration = duration # Needs to store Duration
             runway.occupancy = "OCCUPIED"
             self.stats.record_takeoff(plane, time)

@@ -154,41 +154,55 @@ class SimulationEngine:
 
     def update_constraints(self, now: int, dt: int) -> None:
         """
-        Placeholder for fuel burn logic, etc.
+        Applies fuel burn, diversions, and takeoff cancellations.
         """
-        # Creates temporary list to hold aircraft while their states are updated
+
+        # -------------------------
+        # HOLDING QUEUE (existing)
+        # -------------------------
         temp_holding = []
 
-        # Pulls all aircraft out of the holding queue, preserving their internal order
         while self.airport.holding.size() > 0:
             item = self.airport.holding.dequeue_with_order()
             if item is not None:
                 temp_holding.append(item)
 
-        # Process each aircraft to update fuel and check thresholds
         for _, _, order, aircraft in temp_holding:
-            # Reduce the aircraft's fuel based on the time passed this tick
             aircraft.consumeFuel(dt)
 
-            # Declare fuel emergency before diversion
-            # Check if fuel has dropped to the emergency threshold
             if aircraft.fuelRemaining <= self.params.fuel_emergency_min:
-                # Assign a new fuel emergency or append it to an existing emergency
                 if aircraft.emergency is None:
                     aircraft.emergency = EmergencyType(fuel_emergency=True)
                 else:
                     aircraft.emergency.fuel_emergency = True
 
-
-            # Divert only if fuel critically low
-            # If fuel hits the absolute minimum, the plane must leave the airspace
             if aircraft.fuelRemaining <= self.params.fuel_min_min:
-                # Log the diversion for statistics
                 self.stats.record_diversion(aircraft, now)
-                continue  # do not re-enqueue the aircraft
-            
-            # Put the aircraft back into the queue with its updated priority and original entry time
-            self.airport.holding.enqueue_with_order(aircraft, aircraft.enteredHoldingAt, order)
+                continue
+
+            self.airport.holding.enqueue_with_order(
+                aircraft, aircraft.enteredHoldingAt, order
+            )
+
+        # -------------------------
+        # TAKEOFF QUEUE (NEW)
+        # -------------------------
+        temp_takeoff = []
+
+        while not self.airport.takeoff.isEmpty():
+            temp_takeoff.append(self.airport.takeoff.dequeue())
+
+        for aircraft in temp_takeoff:
+            joined = aircraft.joinedTakeoffQueueAt
+            wait_time = now - joined
+
+            if wait_time > self.params.max_takeoff_wait_min:
+                # CANCEL FLIGHT
+                self.stats.record_cancellation(aircraft, now)
+                continue
+
+            # still valid → re-enqueue
+            self.airport.takeoff.enqueue(aircraft, joined)
 
     # Factory method to create a new arriving aircraft
     def make_inbound_aircraft(self, now: int):
