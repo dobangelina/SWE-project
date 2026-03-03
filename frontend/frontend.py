@@ -356,72 +356,144 @@ class AirportUI:
         container = tk.Frame(self.stats_win, bg=self.lightest_grey, padx=20, pady=20)
         container.pack(fill="both", expand=True, padx=10, pady=10)
 
-        header = "Live Statistical Report" if not stop_flow else "Final Statistical Report"
-        tk.Label(container, text=header, font=("Arial", 16, "bold"), bg=self.lightest_grey).grid(row=0, column=0,
-                                                                                                 columnspan=2,
-                                                                                                 pady=(0, 20))
+        header = "Live Statistical Report" if not stop_flow else "Simulation Stopped - Statistics"
+        tk.Label(container, text=header, font=("Arial", 16, "bold"), bg=self.lightest_grey).grid(
+            row=0, column=0, columnspan=2, pady=(0, 10)
+        )
 
-        # Pull a snapshot of stats.
-        # - Live view: read directly from the engine.
-        # - Saved view (incl. stop-flow): read the latest saved snapshot from the CSV via backend.report helpers.
-        report_data = None
+        # --- Multi-tab statistics view ---
+        # Tab 1: Current simulation
+        # Tabs 2..N: Previous simulations loaded from the statistics CSV (one tab per saved run)
 
-        if show_saved or stop_flow:
+        notebook = ttk.Notebook(container)
+        notebook.grid(row=1, column=0, columnspan=2, sticky="nsew")
+        container.grid_rowconfigure(1, weight=1)
+        container.grid_columnconfigure(0, weight=1)
+        container.grid_columnconfigure(1, weight=1)
+
+        def _safe_num(v, default=0):
+            # Normalize NaN/None/'' to default
             try:
-                last = read_last_report(DEFAULT_STATS_CSV_PATH)
-                report_data = dict(last) if last else {}
+                if v is None:
+                    return default
+                if isinstance(v, str) and v.strip() == "":
+                    return default
+                fv = float(v)
+                # NaN check (NaN != NaN)
+                if fv != fv:
+                    return default
+                return fv
             except Exception:
-                # Fall back to the last in-memory snapshot if CSV can't be read
-                report_data = dict(self.last_saved_report) if self.last_saved_report is not None else {}
+                return default
+
+        def _render_report(parent, report_data, sim_time_min=None):
+            """Render one report dict inside parent."""
+            report_data = report_data or {}
+
+            frame = tk.Frame(parent, bg=self.lightest_grey)
+            frame.pack(fill="both", expand=True)
+            frame.grid_columnconfigure(0, weight=1)
+            frame.grid_columnconfigure(1, weight=1)
+
+            def add_stat(row, label, val):
+                # Clean NaNs coming from CSV
+                if isinstance(val, (int, float)):
+                    val = _safe_num(val, 0)
+                display = f"{val:.2f}" if isinstance(val, float) else str(val)
+
+                tk.Label(frame, text=label, bg=self.lightest_grey, font=("Arial", 11, "bold")).grid(
+                    row=row, column=0, sticky="w", pady=2
+                )
+                tk.Label(frame, text=display, bg=self.lightest_grey, font=("Arial", 11)).grid(
+                    row=row, column=1, sticky="e", pady=2
+                )
+
+            add_stat(0, "Max holding queue size:", _safe_num(report_data.get("maxHoldingQueue", 0), 0))
+            add_stat(1, "Avg holding queue size:", _safe_num(report_data.get("avgHoldingQueue", 0), 0))
+            add_stat(2, "Max holding queue wait time (m):", _safe_num(report_data.get("maxArrivalDelay", 0), 0))
+            add_stat(3, "Avg holding queue wait time (m):", _safe_num(report_data.get("avgHoldingTime", 0), 0))
+            add_stat(4, "Max take off queue size:", _safe_num(report_data.get("maxTakeoffQueue", 0), 0))
+            add_stat(5, "Avg take off queue size:", _safe_num(report_data.get("avgTakeoffQueue", 0), 0))
+            add_stat(6, "Max take off queue wait time (m):", _safe_num(report_data.get("maxTakeoffWait", 0), 0))
+            add_stat(7, "Avg take off queue wait time (m):", _safe_num(report_data.get("avgTakeoffWait", 0), 0))
+            add_stat(8, "Total inbound diversions:", int(_safe_num(report_data.get("diversions", 0), 0)))
+            add_stat(9, "Total outbound cancellations:", int(_safe_num(report_data.get("cancellations", 0), 0)))
+
+            if sim_time_min is None:
+                sim_time_min = _safe_num(report_data.get("sim_time_min", self.engine.get_time()), 0)
+            add_stat(10, "Total simulation time:", self.format_time(int(_safe_num(sim_time_min, 0))))
+
+            # Optional: show saved timestamp if present (from CSV)
+            if isinstance(report_data, dict) and report_data.get("saved_at_utc"):
+                tk.Label(
+                    frame,
+                    text=f"Saved at (UTC): {report_data.get('saved_at_utc')}",
+                    bg=self.lightest_grey,
+                    font=("Arial", 9)
+                ).grid(row=11, column=0, columnspan=2, sticky="w", pady=(10, 0))
+
+        # Current tab
+        if stop_flow or show_saved:
+            # Prefer the persisted final snapshot (the one we save on Stop)
+            try:
+                current_report = dict(read_last_report(DEFAULT_STATS_CSV_PATH) or {})
+            except Exception:
+                current_report = dict(self.last_saved_report) if self.last_saved_report is not None else {}
+            current_time = current_report.get(
+                "sim_time_min",
+                self.last_saved_time if self.last_saved_time is not None else self.engine.get_time()
+            )
         else:
-            report_data = self.engine.get_report()
+            current_report = self.engine.get_report()
+            current_time = self.engine.get_time()
 
-        def add_stat(row, label, val):
-            if isinstance(val, float):
-                display = f"{val:.2f}"
-            else:
-                display = str(val)
+        current_tab = tk.Frame(notebook, bg=self.lightest_grey)
+        notebook.add(current_tab, text="Current")
+        _render_report(current_tab, current_report, current_time)
 
-            tk.Label(
-                container,
-                text=label,
-                bg=self.lightest_grey,
-                font=("Arial", 11, "bold")
-            ).grid(row=row, column=0, sticky="w", pady=2)
-
-            tk.Label(
-                container,
-                text=display,
-                bg=self.lightest_grey,
-                font=("Arial", 11)
-            ).grid(row=row, column=1, sticky="e", pady=2)
-
-        add_stat(1, "Max holding queue size:", report_data.get("maxHoldingQueue", 0))
-        add_stat(2, "Avg holding queue size:", report_data.get("avgHoldingQueue", 0))
-        add_stat(3, "Max holding queue wait time (m):", report_data.get("maxArrivalDelay", 0))
-        add_stat(4, "Avg holding queue wait time (m):", report_data.get("avgHoldingTime", 0))
-        add_stat(5, "Max take off queue size:", report_data.get("maxTakeoffQueue", 0))
-        add_stat(6, "Avg take off queue size:", report_data.get("avgTakeoffQueue", 0))
-        add_stat(7, "Max take off queue wait time (m):", report_data.get("maxTakeoffWait", 0))
-        add_stat(8, "Avg take off queue wait time (m):", report_data.get("avgTakeoffWait", 0))
-        add_stat(9, "Total inbound diversions:", report_data.get("diversions", 0))
-        add_stat(10, "Total outbound cancellations:", report_data.get("cancellations", 0))
-        sim_time = self.engine.get_time()
-        if show_saved or stop_flow:
-            # If loaded from CSV, prefer the persisted sim time
+        # Previous runs tabs (from CSV)
+        def _read_all_reports_csv(path):
+            import csv
+            rows = []
             try:
-                if isinstance(report_data, dict) and "sim_time_min" in report_data:
-                    sim_time = int(float(report_data.get("sim_time_min") or 0))
-                elif self.last_saved_time is not None:
-                    sim_time = self.last_saved_time
+                with open(path, "r", newline="", encoding="utf-8") as f:
+                    reader = csv.DictReader(f)
+                    for r in reader:
+                        rows.append(dict(r))
             except Exception:
-                if self.last_saved_time is not None:
-                    sim_time = self.last_saved_time
-        add_stat(11, "Total simulation time:", self.format_time(sim_time))
+                return []
+
+            # Normalize numeric fields where possible
+            for r in rows:
+                for k, v in list(r.items()):
+                    if k in ("saved_at_utc", "extra_json"):
+                        continue
+                    if isinstance(v, str) and v.strip() == "":
+                        r[k] = None
+                        continue
+                    try:
+                        r[k] = float(v)
+                    except Exception:
+                        pass
+            return rows
+
+        previous_runs = _read_all_reports_csv(DEFAULT_STATS_CSV_PATH)
+        # Sort newest-first by saved_at_utc if present
+        if previous_runs and previous_runs[0].get("saved_at_utc"):
+            previous_runs.sort(key=lambda r: (r.get("saved_at_utc") or ""), reverse=True)
+
+        # Add a tab per previous run. Keep it reasonable to avoid UI overload.
+        MAX_TABS = 12
+        for idx, run in enumerate(previous_runs[:MAX_TABS], start=1):
+            sim_t = int(_safe_num(run.get("sim_time_min", 0), 0))
+            title = f"Run {idx} ({self.format_time(sim_t)})"
+            tab = tk.Frame(notebook, bg=self.lightest_grey)
+            notebook.add(tab, text=title)
+            _render_report(tab, run, sim_t)
 
         if stop_flow:
             # Stop-flow: two buttons (Close / Reset Simulation). No auto-resume.
-            btn_row = 12
+            btn_row = 2
             tk.Button(
                 container,
                 text="Close",
@@ -454,7 +526,7 @@ class AirportUI:
                 fg="white",
                 font=("Arial", 12, "bold"),
                 command=lambda: [self.stats_win.destroy(), self.toggle_pause(force_play=True)]
-            ).grid(row=12, column=0, columnspan=2, pady=20, ipadx=20)
+            ).grid(row=2, column=0, columnspan=2, pady=20, ipadx=20)
 
     # --- Data Application & Runway Degradation ---
 
