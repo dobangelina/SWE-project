@@ -138,10 +138,10 @@ def inject_test_aircraft(engine: SimulationEngine) -> None:
     now = engine.get_time()
 
     # Fuel emergencies with different fuel
-    a1 = Aircraft("T1", "INBOUND", scheduledTime=now, fuelRemaining=14, emergency=EmergencyType(fuel_emergency=True))
-    a2 = Aircraft("T2", "INBOUND", scheduledTime=now, fuelRemaining=12, emergency=EmergencyType(fuel_emergency=True))
+    a1 = Aircraft("T1", "INBOUND", scheduledTime=now, fuelRemaining=14, emergency=EmergencyType(mechanical_failure=True))
+    a2 = Aircraft("T2", "INBOUND", scheduledTime=now, fuelRemaining=12, emergency=EmergencyType(mechanical_failure=True))
     a3 = Aircraft("T3", "INBOUND", scheduledTime=now, fuelRemaining=18, emergency=EmergencyType(fuel_emergency=True))
-    a4 = Aircraft("T4", "INBOUND", scheduledTime=now, fuelRemaining=50, emergency=EmergencyType(mechanical_failure=True))
+    a4 = Aircraft("T4", "INBOUND", scheduledTime=now, fuelRemaining=50, emergency=EmergencyType(fuel_emergency=True))
 
     # Non-emergency inbound
     a5 = Aircraft("T5", "INBOUND", scheduledTime=now, fuelRemaining=40, emergency=None)

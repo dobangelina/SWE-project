@@ -1,0 +1,2 @@
+saved_at_utc,sim_time_min,maxHoldingQueue,avgHoldingQueue,maxArrivalDelay,avgHoldingTime,maxTakeoffQueue,avgTakeoffQueue,maxTakeoffWait,avgTakeoffWait,avgArrivalDelay,diversions,cancellations,extra_json
+2026-03-03T23:27:54.449377+00:00,73,26.0,17.315068493150687,44.0,18.64,26.0,17.383561643835616,30.0,20.36,18.64,17.0,13.0,
