@@ -15,6 +15,9 @@ class HoldingQueue:
         self.arrival_order = 0
         self.orderingRule = "Emergency-first"
 
+    def __len__(self):
+        return self.size()
+
     #adds a new aircraft to the queue, returns None
     def enqueue(self, a: Aircraft, time: int) -> None:
 
@@ -84,6 +87,8 @@ class TakeOffQueue:
         self.orderingRule = "FIFO Only"
 
     #logic of queue follows First In First Out so no priority needed
+    def __len__(self):
+        return self.size()
 
     def enqueue(self, a: Aircraft, time: int) -> None:
         self.items.append(a)
