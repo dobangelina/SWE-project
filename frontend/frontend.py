@@ -122,8 +122,9 @@ class AirportUI:
             self.last_saved_report = None
             self.last_saved_time = None
 
-        # Optional: pop open the statistics window immediately
-        self.open_statistics(show_saved=True)
+
+        # Show the final statistics snapshot and let the user decide what to do next.
+        self.open_statistics(show_saved=True, stop_flow=True)
 
     # --- UI Builders ---
 
@@ -324,7 +325,7 @@ class AirportUI:
 
         tk.Button(container, text="Apply Changes", bg=self.medium_grey, fg="white", font=("Arial", 12, "bold"), command=apply).grid(row=8, column=0, columnspan=2, pady=20, ipadx=20)
 
-    def open_statistics(self, event=None, show_saved=False):
+    def open_statistics(self, event=None, show_saved=False, stop_flow=False):
         # Bring an existing stats window to the front rather than opening a duplicate.
         if hasattr(self, 'stats_win') and self.stats_win.winfo_exists():
             self.stats_win.lift()
@@ -332,15 +333,23 @@ class AirportUI:
 
         self.toggle_pause(force_pause=True)
         self.stats_win = tk.Toplevel(self.root)
-        self.stats_win.title("Statistical Report")
+        self.stats_win.title("Statistical Report" if not stop_flow else "Simulation Stopped - Statistics")
         self.stats_win.geometry("500x450")
         self.stats_win.configure(bg=self.dark_grey)
         self.stats_win.grab_set()
+
+        # In stop-flow, closing the window should NOT auto-resume the simulation.
+        if stop_flow:
+            self.stats_win.protocol("WM_DELETE_WINDOW", self.stats_win.destroy)
+        else:
+            # Default behaviour: close resumes play.
+            self.stats_win.protocol("WM_DELETE_WINDOW", lambda: [self.stats_win.destroy(), self.toggle_pause(force_play=True)])
         
         container = tk.Frame(self.stats_win, bg=self.lightest_grey, padx=20, pady=20)
         container.pack(fill="both", expand=True, padx=10, pady=10)
         
-        tk.Label(container, text="Live Statistical Report", font=("Arial", 16, "bold"), bg=self.lightest_grey).grid(row=0, column=0, columnspan=2, pady=(0, 20))
+        header = "Live Statistical Report" if not stop_flow else "Final Statistical Report"
+        tk.Label(container, text=header, font=("Arial", 16, "bold"), bg=self.lightest_grey).grid(row=0, column=0, columnspan=2, pady=(0, 20))
         
         # Pull a snapshot of stats from the engine at the moment the dialog opens.
         report_data = None
@@ -386,14 +395,42 @@ class AirportUI:
             sim_time = self.last_saved_time
         add_stat(11, "Total simulation time:", self.format_time(sim_time))
         
-        # Closing the stats window resumes the simulation automatically.
-        tk.Button(container, text="Close", bg=self.medium_grey, fg="white", font=("Arial", 12, "bold"), command=lambda: [self.stats_win.destroy(), self.toggle_pause(force_play=True)]).grid(row=12, column=0, columnspan=2, pady=20, ipadx=20)
-        if self.engine.get_time() == 0 and self.last_saved_report is not None:
-            report_data = dict(self.last_saved_report)
-            sim_time = self.last_saved_time or 0
+        if stop_flow:
+            # Stop-flow: two buttons (Close / Reset Simulation). No auto-resume.
+            btn_row = 12
+            tk.Button(
+                container,
+                text="Close",
+                bg=self.medium_grey,
+                fg="white",
+                font=("Arial", 12, "bold"),
+                command=self.stats_win.destroy
+            ).grid(row=btn_row, column=0, pady=20, ipadx=20, sticky="ew")
+
+            def _reset_from_stop():
+                # Close stats first (avoids grab/focus issues), then reset.
+                if hasattr(self, 'stats_win') and self.stats_win.winfo_exists():
+                    self.stats_win.destroy()
+                self.reset_simulation(open_settings=True)
+
+            tk.Button(
+                container,
+                text="Reset Simulation",
+                bg=self.medium_grey,
+                fg="white",
+                font=("Arial", 12, "bold"),
+                command=_reset_from_stop
+            ).grid(row=btn_row, column=1, pady=20, ipadx=20, sticky="ew")
         else:
-            report_data = self.engine.get_report()
-            sim_time = self.engine.get_time()
+            # Default: closing resumes the simulation automatically.
+            tk.Button(
+                container,
+                text="Close",
+                bg=self.medium_grey,
+                fg="white",
+                font=("Arial", 12, "bold"),
+                command=lambda: [self.stats_win.destroy(), self.toggle_pause(force_play=True)]
+            ).grid(row=12, column=0, columnspan=2, pady=20, ipadx=20)
 
     # --- Data Application & Runway Degradation ---
 
@@ -467,7 +504,7 @@ class AirportUI:
             self.simulation_tick()
             self.smooth_update()
 
-    def reset_simulation(self):
+    def reset_simulation(self, open_settings=True):
         # Pause immediately so no ticks fire while we're tearing state down.
         self.toggle_pause(force_pause=True)
 
@@ -536,11 +573,10 @@ class AirportUI:
         # Explicitly mark the engine as running again before reopening settings.
         self.engine.is_paused = False
 
-        # Refresh the empty UI, then let the user reconfigure before restarting.
+        # Refresh the empty UI, then (optionally) let the user reconfigure before restarting.
         self.update_ui()
-        self.open_simulation_settings()
-        if self.last_saved_report is not None:
-            self.open_statistics(show_saved=True)
+        if open_settings:
+            self.open_simulation_settings()
 
 
     def simulation_tick(self):
@@ -869,7 +905,7 @@ class AirportUI:
     def show_aircraft_in_display(self, airplane):
         # Clear all the widgets in the display area and rebuild
         for w in self.display_area_frame.winfo_children(): w.destroy()
-        tk.Frame(self.display_area_frame, text=display_airplane_caption, bg="black", fg="white", font=("Arial", 12, "bold", "underline"), ipadx=5, relief="flat", height = 39).grid(column=0, row=0, sticky="s")
+        tk.Frame(self.display_area_frame, bg="black", fg="white", font=("Arial", 12, "bold", "underline"), ipadx=5, relief="flat", height = 39).grid(column=0, row=0, sticky="s")
 
 
 
