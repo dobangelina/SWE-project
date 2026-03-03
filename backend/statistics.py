@@ -18,6 +18,7 @@ class Statistics:
     # Queue Sizes
     max_holding_size: int = 0
     max_takeoff_size: int = 0
+    max_takeoff_wait = 0
     holding_size_sum: int = 0
     takeoff_size_sum: int = 0
     snapshots: int = 0
@@ -114,6 +115,9 @@ class Statistics:
         self.takeoff_wait_sum += wait
         self.takeoff_count += 1
 
+
+        self.max_takeoff_wait = max(self.max_takeoff_wait, wait)
+
     # Increments the diversion counter 
     def record_diversion(self, aircraft: Any = None, time: SimTime = 0) -> None:
         self.diversions += 1
@@ -141,6 +145,7 @@ class Statistics:
             "avgTakeoffQueue": float(avg_takeoff_q),
             "avgHoldingTime": float(avg_hold_time),
             "avgTakeoffWait": float(avg_takeoff_wait),
+            "maxTakeoffWait": float(self.max_takeoff_wait),
             "avgArrivalDelay": float(avg_arrival_delay),
             "maxArrivalDelay": float(self.max_arrival_delay),
             "diversions": float(self.diversions),

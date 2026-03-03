@@ -595,12 +595,20 @@ class AirportUI:
         ).place(relx=0.5, rely=0.5, anchor="center")
 
         # Explicitly mark the engine as running again before reopening settings.
-        self.engine.is_paused = False
+        #self.engine.is_paused = False
 
         # Refresh the empty UI, then (optionally) let the user reconfigure before restarting.
         self.update_ui()
+
+
+
         if open_settings:
+            # Keep paused: settings window will run and Apply will start the sim
             self.open_simulation_settings()
+        else:
+            # Actually restart the tick + smooth loops
+            self.toggle_pause(force_play=True)
+
 
 
     def simulation_tick(self):

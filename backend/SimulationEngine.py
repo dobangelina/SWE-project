@@ -47,6 +47,19 @@ class SimulationEngine:
         if hasattr(self.airport, "updateRunways"):
             self.airport.updateRunways(now)
 
+        # --- update statistics snapshot each tick ---
+        try:
+            holding_q = getattr(self.airport, "holding", None)
+            takeoff_q = getattr(self.airport, "takeoff", None)
+
+            holding_size = len(holding_q) if holding_q is not None else 0
+            takeoff_size = len(takeoff_q) if takeoff_q is not None else 0
+
+            if getattr(self, "stats", None) is not None:
+                self.stats.snapshot_queues(holding_size, takeoff_size, int(self.current_time))
+        except Exception as e:
+            print(f"[stats] snapshot_queues failed: {e}")
+
         # generate arrivals/departures (adds to pending with jitter)
         self._generate_arrivals(now, dt)
         self._generate_departures(now, dt)
