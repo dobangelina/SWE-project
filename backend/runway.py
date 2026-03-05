@@ -19,6 +19,7 @@ class Runway:
         self.currentAircraft = aircraft
         self.currentOperation = operationMode
         self.occupiedUntil = time + duration
+        self.occupancy = "OCCUPIED"
 
     # Checks if a runway is available for a plane to land on it.
     def canLand(self) -> bool:
