@@ -603,6 +603,8 @@ class AirportUI:
         self.engine.speed_multiplier = speed_mult
         self.engine.params = params
 
+        self.engine.stats.configure_from_params(params)
+
         current_runways = list(self.engine.airport.runways)
         current_count = len(current_runways)
 
@@ -659,6 +661,7 @@ class AirportUI:
 
         # Replace stats and make sure the airport reference points to the same object.
         new_stats = Statistics()
+        new_stats.configure_from_params(self.engine.params)
         self.engine.stats = new_stats
         self.engine.airport.stats = new_stats
 
