@@ -1,4 +1,3 @@
-
 import tkinter as tk
 import time
 from PIL import Image, ImageTk
@@ -16,6 +15,11 @@ class AirportUI:
     def __init__(self, root, engine):
         self.root = root
         self.engine = engine
+
+        # --- Display Scaling Logic ---
+        screen_w = self.root.winfo_screenwidth()
+        # Threshold set at 2000 to differentiate 1080p (1920) and 1440p/2K (2560)
+        self.scale = 1.0 if screen_w >= 2000 else 0.75
 
         # Tracks the scheduled after() IDs so we can cancel them on pause.
         self.sim_loop_id = None
@@ -61,8 +65,8 @@ class AirportUI:
         # The two standard columns (queues) are narrower than the central display column.
         self.col_w_standard = self.window_w * (7/32)
         self.col_w_display = self.window_w * (143/480)
-        # Fixed height for the bottom control panel strip.
-        self.panel_h = 54
+        # Fixed height for the bottom control panel strip, scaled for 1k/2k.
+        self.panel_h = int(54 * self.scale)
         # Top columns fill whatever vertical space remains after the panel.
         self.top_col_h = self.window_h - (2 * self.margin_y) - self.panel_h - self.gap
 
@@ -85,7 +89,7 @@ class AirportUI:
 
         # Shared settings applied to every progress bar style.
         common_bar_settings = {
-            "thickness": 20,
+            "thickness": int(20 * self.scale),
             "troughcolor": "#797979",
             "bordercolor": "#797979",
         }
@@ -95,7 +99,7 @@ class AirportUI:
         # Green bars are used for outbound (take-off) aircraft.
         style.configure("Green.Horizontal.TProgressbar", foreground="#008000", background="#008000", lightcolor="#37CA37", darkcolor="#005300", **common_bar_settings)
         # Custom scrollbar styling to match the dark theme.
-        style.configure("Vertical.TScrollbar", gripcount=0, background=self.lightest_grey, troughcolor=self.medium_grey, bordercolor=self.dark_grey, arrowcolor=self.medium_grey, arrowsize=13)
+        style.configure("Vertical.TScrollbar", gripcount=0, background=self.lightest_grey, troughcolor=self.medium_grey, bordercolor=self.dark_grey, arrowcolor=self.medium_grey, arrowsize=int(13 * self.scale))
         style.map("Vertical.TScrollbar", background=[("active", "#dcdad5"), ("disabled", self.lightest_grey)], troughcolor=[("active", self.medium_grey), ("disabled", self.medium_grey)])
 
     def bind_keys(self):
@@ -147,9 +151,11 @@ class AirportUI:
         inner_frame = tk.Frame(outer_frame, bg=self.light_grey, width=inner_w, height=inner_h)
         inner_frame.place(x=inset, y=inset, width=inner_w, height=inner_h)
 
+        title_h = int(40 * self.scale)
+
         if title:
             # Title bar spans the full width at the top of the inner frame.
-            tk.Label(inner_frame, text=name, bg=self.lightest_grey, fg=self.text_color, font=("Arial", 14, "bold")).place(relx=0, rely=0, relwidth=1, anchor="nw")
+            tk.Label(inner_frame, text=name, bg=self.lightest_grey, fg=self.text_color, font=("Arial", int(14 * self.scale), "bold")).place(relx=0, rely=0, relwidth=1, anchor="nw")
 
         if not scrollable:
             return inner_frame
@@ -169,7 +175,7 @@ class AirportUI:
                 scrollbar.place_forget()
                 canvas.yview_moveto(0)
             else:
-                scrollbar.place(relx=1, y=40, anchor="ne", height=inner_h - 40)
+                scrollbar.place(relx=1, y=title_h, anchor="ne", height=inner_h - title_h)
                 canvas.configure(scrollregion=canvas.bbox("all"))
 
         scrollable_inner_frame.bind("<Configure>", update_scroll_visibility)
@@ -196,8 +202,8 @@ class AirportUI:
 
         canvas.bind("<Configure>", resize_scrollable_frame)
         canvas.configure(yscrollcommand=scrollbar.set)
-        # Place the canvas below the 40 px title bar.
-        canvas.place(x=0, y=40, relwidth=1, height=inner_h - 40)
+        # Place the canvas below the scaled title bar.
+        canvas.place(x=0, y=title_h, relwidth=1, height=inner_h - title_h)
 
         return scrollable_inner_frame
 
@@ -230,19 +236,19 @@ class AirportUI:
         control_panel_frame.rowconfigure(0, weight=1)
 
         # Clock display on the far left of the control panel.
-        self.clock_label = tk.Label(control_panel_frame, text="00:00", bg=self.lightest_grey, fg=self.text_color, font=("Arial", 17, "bold"))
+        self.clock_label = tk.Label(control_panel_frame, text="00:00", bg=self.lightest_grey, fg=self.text_color, font=("Arial", int(17 * self.scale), "bold"))
         self.clock_label.grid(column=0, row=0, sticky="nsew", padx=[7,5], pady=7, ipadx=5)
 
         # Action buttons are spaced evenly across the rest of the panel.
-        tk.Button(control_panel_frame, text="Pause/Continue [P]", bg=self.lightest_grey, font=("Arial", 12, "bold", "underline"), padx=5, relief="flat", command=self.toggle_pause).grid(column=1, row=0, sticky="nsew", padx=5, pady=7)
-        tk.Button(control_panel_frame, text="Simulation Settings [S]", bg=self.lightest_grey, font=("Arial", 12, "bold", "underline"), padx=5, relief="flat", command=self.open_simulation_settings).grid(column=2, row=0, sticky="nsew", padx=5, pady=7)
-        tk.Button(control_panel_frame, text="View Statistics [V]", bg=self.lightest_grey, font=("Arial", 12, "bold", "underline"), padx=5, relief="flat", command=self.open_statistics).grid(column=3, row=0, sticky="nsew", padx=5, pady=7)
-        tk.Button(control_panel_frame, text="Reset Simulation [R]", bg=self.lightest_grey, font=("Arial", 12, "bold", "underline"), padx=5, relief="flat", command=self.reset_simulation).grid(column=4, row=0, sticky="nsew", padx=5, pady=7)
+        tk.Button(control_panel_frame, text="Pause/Continue [P]", bg=self.lightest_grey, font=("Arial", int(12 * self.scale), "bold", "underline"), padx=5, relief="flat", command=self.toggle_pause).grid(column=1, row=0, sticky="nsew", padx=5, pady=7)
+        tk.Button(control_panel_frame, text="Simulation Settings [S]", bg=self.lightest_grey, font=("Arial", int(12 * self.scale), "bold", "underline"), padx=5, relief="flat", command=self.open_simulation_settings).grid(column=2, row=0, sticky="nsew", padx=5, pady=7)
+        tk.Button(control_panel_frame, text="View Statistics [V]", bg=self.lightest_grey, font=("Arial", int(12 * self.scale), "bold", "underline"), padx=5, relief="flat", command=self.open_statistics).grid(column=3, row=0, sticky="nsew", padx=5, pady=7)
+        tk.Button(control_panel_frame, text="Reset Simulation [R]", bg=self.lightest_grey, font=("Arial", int(12 * self.scale), "bold", "underline"), padx=5, relief="flat", command=self.reset_simulation).grid(column=4, row=0, sticky="nsew", padx=5, pady=7)
         tk.Button(
             control_panel_frame,
             text="Stop [X]",
             bg=self.lightest_grey,
-            font=("Arial", 12, "bold", "underline"),
+            font=("Arial", int(12 * self.scale), "bold", "underline"),
             padx=5,
             relief="flat",
             command=self.stop_simulation
@@ -261,7 +267,7 @@ class AirportUI:
 
         self.settings_win = tk.Toplevel(self.root)
         self.settings_win.title("Simulation Settings")
-        self.settings_win.geometry("450x450")
+        self.settings_win.geometry(f"{int(450 * self.scale)}x{int(450 * self.scale)}")
         self.settings_win.configure(bg=self.dark_grey)
         self.settings_win.grab_set()  # Block interaction with the main window.
         self.settings_win.resizable(False, False)
@@ -270,13 +276,13 @@ class AirportUI:
         container = tk.Frame(self.settings_win, bg=self.lightest_grey, padx=20, pady=20)
         container.pack(fill="both", expand=True, padx=10, pady=10)
 
-        tk.Label(container, text="Adjust Simulation Parameters", font=("Arial", 16, "bold"), bg=self.lightest_grey).grid(row=0, column=0, columnspan=2, pady=(0, 20))
+        tk.Label(container, text="Adjust Simulation Parameters", font=("Arial", int(16 * self.scale), "bold"), bg=self.lightest_grey).grid(row=0, column=0, columnspan=2, pady=(0, 20))
 
         entries = {}
         def add_setting(row, label_text, default_val):
             # Helper that adds a label/entry pair and registers the entry in the dict.
-            tk.Label(container, text=label_text, bg=self.lightest_grey, font=("Arial", 11, "bold")).grid(row=row, column=0, sticky="w", pady=5)
-            entry = ttk.Entry(container, font=("Arial", 11), width=10)
+            tk.Label(container, text=label_text, bg=self.lightest_grey, font=("Arial", int(11 * self.scale), "bold")).grid(row=row, column=0, sticky="w", pady=5)
+            entry = ttk.Entry(container, font=("Arial", int(11 * self.scale)), width=10)
             entry.insert(0, str(default_val))
             entry.grid(row=row, column=1, sticky="e", pady=5)
             entries[label_text] = entry
@@ -330,7 +336,7 @@ class AirportUI:
                 tk.Label(container, text=f"Apply Error: {str(e)[:40]}", fg="red", bg=self.lightest_grey).grid(row=9, column=0, columnspan=2)
                 print(f"Apply error: {e}")
 
-        tk.Button(container, text="Apply Changes", bg=self.medium_grey, fg="white", font=("Arial", 12, "bold"), command=apply).grid(row=8, column=0, columnspan=2, pady=20, ipadx=20)
+        tk.Button(container, text="Apply Changes", bg=self.medium_grey, fg="white", font=("Arial", int(12 * self.scale), "bold"), command=apply).grid(row=8, column=0, columnspan=2, pady=20, ipadx=20)
 
     def open_statistics(self, event=None, show_saved=False, stop_flow=False):
         # Bring an existing stats window to the front rather than opening a duplicate.
@@ -341,7 +347,7 @@ class AirportUI:
         self.toggle_pause(force_pause=True)
         self.stats_win = tk.Toplevel(self.root)
         self.stats_win.title("Statistical Report" if not stop_flow else "Simulation Stopped - Statistics")
-        self.stats_win.geometry("500x450")
+        self.stats_win.geometry(f"{int(500 * self.scale)}x{int(450 * self.scale)}")
         self.stats_win.configure(bg=self.dark_grey)
         self.stats_win.grab_set()
 
@@ -357,7 +363,7 @@ class AirportUI:
         container.pack(fill="both", expand=True, padx=10, pady=10)
 
         header = "Live Statistical Report" if not stop_flow else "Simulation Stopped - Statistics"
-        tk.Label(container, text=header, font=("Arial", 16, "bold"), bg=self.lightest_grey).grid(
+        tk.Label(container, text=header, font=("Arial", int(16 * self.scale), "bold"), bg=self.lightest_grey).grid(
             row=0, column=0, columnspan=2, pady=(0, 10)
         )
 
@@ -401,10 +407,10 @@ class AirportUI:
                     val = _safe_num(val, 0)
                 display = f"{val:.2f}" if isinstance(val, float) else str(val)
 
-                tk.Label(frame, text=label, bg=self.lightest_grey, font=("Arial", 11, "bold")).grid(
+                tk.Label(frame, text=label, bg=self.lightest_grey, font=("Arial", int(11 * self.scale), "bold")).grid(
                     row=row, column=0, sticky="w", pady=2
                 )
-                tk.Label(frame, text=display, bg=self.lightest_grey, font=("Arial", 11)).grid(
+                tk.Label(frame, text=display, bg=self.lightest_grey, font=("Arial", int(11 * self.scale))).grid(
                     row=row, column=1, sticky="e", pady=2
                 )
 
@@ -429,7 +435,7 @@ class AirportUI:
                     frame,
                     text=f"Saved at (UTC): {report_data.get('saved_at_utc')}",
                     bg=self.lightest_grey,
-                    font=("Arial", 9)
+                    font=("Arial", int(9 * self.scale))
                 ).grid(row=11, column=0, columnspan=2, sticky="w", pady=(10, 0))
 
         # Current tab
@@ -499,7 +505,7 @@ class AirportUI:
                 text="Close",
                 bg=self.medium_grey,
                 fg="white",
-                font=("Arial", 12, "bold"),
+                font=("Arial", int(12 * self.scale), "bold"),
                 command=self.stats_win.destroy
             ).grid(row=btn_row, column=0, pady=20, ipadx=20, sticky="ew")
 
@@ -514,7 +520,7 @@ class AirportUI:
                 text="Reset Simulation",
                 bg=self.medium_grey,
                 fg="white",
-                font=("Arial", 12, "bold"),
+                font=("Arial", int(12 * self.scale), "bold"),
                 command=_reset_from_stop
             ).grid(row=btn_row, column=1, pady=20, ipadx=20, sticky="ew")
         else:
@@ -524,7 +530,7 @@ class AirportUI:
                 text="Close",
                 bg=self.medium_grey,
                 fg="white",
-                font=("Arial", 12, "bold"),
+                font=("Arial", int(12 * self.scale), "bold"),
                 command=lambda: [self.stats_win.destroy(), self.toggle_pause(force_play=True)]
             ).grid(row=2, column=0, columnspan=2, pady=20, ipadx=20)
 
@@ -663,16 +669,11 @@ class AirportUI:
             self.display_info_frame,
             text="Nothing Selected - Click on an Aircraft \n or Runway",
             bg=self.lightest_grey,
-            font=("Arial", 14, "bold")
+            font=("Arial", int(14 * self.scale), "bold")
         ).place(relx=0.5, rely=0.5, anchor="center")
-
-        # Explicitly mark the engine as running again before reopening settings.
-        #self.engine.is_paused = False
 
         # Refresh the empty UI, then (optionally) let the user reconfigure before restarting.
         self.update_ui()
-
-
 
         if open_settings:
             # Keep paused: settings window will run and Apply will start the sim
@@ -680,8 +681,6 @@ class AirportUI:
         else:
             # Actually restart the tick + smooth loops
             self.toggle_pause(force_play=True)
-
-
 
     def simulation_tick(self):
         if self.engine.is_paused:
@@ -831,11 +830,10 @@ class AirportUI:
         self.display_area_frame.plane_photo = plane_photo
         plane_icon_label.pack(expand=False)  # expand=True centres it in the available space
 
-
     def update_display_runway(self, runway):
         runway_icon = Image.open("frontend/assets/runway_icon.png")
         runway_icon = runway_icon.convert("RGBA")
-        rotation_angle = -runway.bearing
+        rotation_angle = -runway.bearing * 10
         runway_icon = runway_icon.rotate(rotation_angle, expand=False)
         runway_icon = runway_icon.resize(
             (int(self.col_w_display * 1.4), int(self.col_w_display * 1.4)),
@@ -853,20 +851,18 @@ class AirportUI:
         self.display_area_frame.runway_photo = runway_photo
         runway_icon_label.pack(expand=False)  # expand=True centres it in the available space
 
-
-
     def create_plane_widget(self, queue_column, plane):
         widget_frame = tk.Frame(queue_column, bg=self.lightest_grey, padx=5, pady=5, cursor="hand2")
         widget_frame.pack(fill="x", pady=4, padx=(4, 22))
         widget_frame.columnconfigure(0, weight=1)
         widget_frame.columnconfigure(1, weight=1)
         # Six labels laid out as a 3-row grid: top-left/right, mid-left/right, bottom-left/right.
-        tl = tk.Label(widget_frame, text="", bg=self.lightest_grey, font=("Arial", 13, "bold"), anchor="w")
-        tr = tk.Label(widget_frame, text="", bg=self.lightest_grey, fg=self.emergency_text_color, font=("Arial", 11, "bold"), anchor="e")
-        ml = tk.Label(widget_frame, text="", bg=self.lightest_grey, font=("Arial", 11), anchor="w")
-        mr = tk.Label(widget_frame, text="", bg=self.lightest_grey, font=("Arial", 5), anchor="e")
-        bl = tk.Label(widget_frame, text="[Progress]", bg=self.lightest_grey, font=("Arial", 11, "bold"), anchor="w")
-        br = tk.Label(widget_frame, text="", bg=self.lightest_grey, font=("Arial", 11), anchor="e")
+        tl = tk.Label(widget_frame, text="", bg=self.lightest_grey, font=("Arial", int(13 * self.scale), "bold"), anchor="w")
+        tr = tk.Label(widget_frame, text="", bg=self.lightest_grey, fg=self.emergency_text_color, font=("Arial", int(11 * self.scale), "bold"), anchor="e")
+        ml = tk.Label(widget_frame, text="", bg=self.lightest_grey, font=("Arial", int(11 * self.scale)), anchor="w")
+        mr = tk.Label(widget_frame, text="", bg=self.lightest_grey, font=("Arial", max(4, int(5 * self.scale))), anchor="e")
+        bl = tk.Label(widget_frame, text="[Progress]", bg=self.lightest_grey, font=("Arial", int(11 * self.scale), "bold"), anchor="w")
+        br = tk.Label(widget_frame, text="", bg=self.lightest_grey, font=("Arial", int(11 * self.scale)), anchor="e")
         tl.grid(row=0, column=0, sticky="w")
         tr.grid(row=0, column=1, sticky="e")
         ml.grid(row=1, column=0, sticky="w")
@@ -874,7 +870,7 @@ class AirportUI:
         bl.grid(row=2, column=0, sticky="w")
         br.grid(row=2, column=1, sticky="e")
         # Progress bar sits in its own container frame so height can be fixed.
-        pc = tk.Frame(widget_frame, height=13, bg=self.lightest_grey)
+        pc = tk.Frame(widget_frame, height=int(13 * self.scale), bg=self.lightest_grey)
         pc.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(5, 0))
         pc.pack_propagate(False)
         progress = ttk.Progressbar(pc, orient="horizontal", mode="determinate")
@@ -930,8 +926,8 @@ class AirportUI:
         widget_frame.pack(fill="x", pady=4, padx=(4, 22))
         widget_frame.columnconfigure(0, weight=1)
         widget_frame.columnconfigure(1, weight=1)
-        # Progress bar container, fixed at 13 px tall.
-        pc = tk.Frame(widget_frame, height=13, bg=self.lightest_grey)
+        # Progress bar container, scaled height.
+        pc = tk.Frame(widget_frame, height=int(13 * self.scale), bg=self.lightest_grey)
         pc.pack_propagate(False)
         pg_settings = {"row": 3, "column": 0, "columnspan": 2, "sticky": "ew", "pady": (5, 0)}
         pc.grid(**pg_settings)
@@ -942,12 +938,12 @@ class AirportUI:
         bf.grid(row=0, column=1, sticky="ne")
         tk.Button(bf, text="Status", bg=self.lightest_grey, padx=5, relief="solid", command=lambda r=rw, wf=widget_frame, c=pc: self.cycle_runway_status(r, wf, c, pg_settings)).pack(side="right", padx=(2, 0))
         tk.Button(bf, text="Mode", bg=self.lightest_grey, padx=5, relief="solid", command=lambda: self.cycle_runway_mode(rw)).pack(side="right")
-        tl = tk.Label(widget_frame, text="", bg=self.lightest_grey, font=("Arial", 12, "bold"), anchor="w")
-        bl = tk.Label(widget_frame, text="", bg=self.lightest_grey, font=("Arial", 10, "bold"), anchor="w")
+        tl = tk.Label(widget_frame, text="", bg=self.lightest_grey, font=("Arial", int(12 * self.scale), "bold"), anchor="w")
+        bl = tk.Label(widget_frame, text="", bg=self.lightest_grey, font=("Arial", int(10 * self.scale), "bold"), anchor="w")
         tl.grid(row=0, column=0, sticky="w")
         bl.grid(row=2, column=0, sticky="w")
         # Status text in emergency red on the bottom-right.
-        br = tk.Label(widget_frame, text="Status", bg=self.lightest_grey, fg=self.emergency_text_color, font=("Arial", 9, "bold"), anchor="e")
+        br = tk.Label(widget_frame, text="Status", bg=self.lightest_grey, fg=self.emergency_text_color, font=("Arial", int(9 * self.scale), "bold"), anchor="e")
         br.grid(row=2, column=1, sticky="e")
 
         widget_ref = {}
@@ -1055,7 +1051,6 @@ class AirportUI:
         # Use pack
         self.update_display_plane(plane)
 
-
     def show_runway_in_display(self, runway):
         # Clear previous content
         for w in self.display_area_frame.winfo_children():
@@ -1067,14 +1062,14 @@ class AirportUI:
     def show_airplane_info(self, airplane):
         # Clear whatever was shown before and rebuild with this aircraft's data.
         for w in self.display_info_frame.winfo_children(): w.destroy()
-        tk.Label(self.display_info_frame, text=f"Aircraft {airplane.callsign}", bg=self.lightest_grey, font=("Arial", 14, "bold")).place(x=0, y=0, relwidth=1)
+        tk.Label(self.display_info_frame, text=f"Aircraft {airplane.callsign}", bg=self.lightest_grey, font=("Arial", int(14 * self.scale), "bold")).place(x=0, y=0, relwidth=1)
         f = tk.Frame(self.display_info_frame, bg=self.lightest_grey)
-        f.place(x=0, y=30, relwidth=1, relheight=1)
+        f.place(x=0, y=int(30 * self.scale), relwidth=1, relheight=1)
         f.grid_columnconfigure(0, weight=1)
         f.grid_columnconfigure(1, weight=1)
         def add(r, l, v):
-            tk.Label(f, text=l, bg=self.lightest_grey, font=("Arial", 10, "bold"), anchor="w").grid(row=r, column=0, sticky="w", padx=10, pady=2)
-            tk.Label(f, text=str(v), bg=self.lightest_grey, font=("Arial", 10, "bold"), anchor="e").grid(row=r, column=1, sticky="e", padx=10, pady=2)
+            tk.Label(f, text=l, bg=self.lightest_grey, font=("Arial", int(10 * self.scale), "bold"), anchor="w").grid(row=r, column=0, sticky="w", padx=10, pady=2)
+            tk.Label(f, text=str(v), bg=self.lightest_grey, font=("Arial", int(10 * self.scale), "bold"), anchor="e").grid(row=r, column=1, sticky="e", padx=10, pady=2)
         add(0, "Operator:", getattr(airplane, 'operator', 'N/A'))
         add(1, "Origin:", getattr(airplane, 'origin', 'N/A'))
         add(2, "Destination:", getattr(airplane, 'destination', 'N/A'))
@@ -1086,14 +1081,14 @@ class AirportUI:
     def show_runway_info(self, rw):
         # Clear whatever was shown before and rebuild with this runway's data.
         for w in self.display_info_frame.winfo_children(): w.destroy()
-        tk.Label(self.display_info_frame, text=f"Runway {rw.id}", bg=self.lightest_grey, font=("Arial", 14, "bold")).place(x=0, y=0, relwidth=1)
+        tk.Label(self.display_info_frame, text=f"Runway {rw.id}", bg=self.lightest_grey, font=("Arial", int(14 * self.scale), "bold")).place(x=0, y=0, relwidth=1)
         f = tk.Frame(self.display_info_frame, bg=self.lightest_grey)
-        f.place(x=0, y=30, relwidth=1, relheight=1)
+        f.place(x=0, y=int(30 * self.scale), relwidth=1, relheight=1)
         f.grid_columnconfigure(0, weight=1)
         f.grid_columnconfigure(1, weight=1)
         def add(r, l, v):
-            tk.Label(f, text=l, bg=self.lightest_grey, font=("Arial", 10, "bold"), anchor="w").grid(row=r, column=0, sticky="w", padx=10, pady=2)
-            tk.Label(f, text=str(v), bg=self.lightest_grey, font=("Arial", 10, "bold"), anchor="e").grid(row=r, column=1, sticky="e", padx=10, pady=2)
+            tk.Label(f, text=l, bg=self.lightest_grey, font=("Arial", int(10 * self.scale), "bold"), anchor="w").grid(row=r, column=0, sticky="w", padx=10, pady=2)
+            tk.Label(f, text=str(v), bg=self.lightest_grey, font=("Arial", int(10 * self.scale), "bold"), anchor="e").grid(row=r, column=1, sticky="e", padx=10, pady=2)
         add(0, "Operating Mode:", rw.mode)
         add(1, "Occupancy:", rw.occupancy)
         add(2, "Status:", rw.status)
