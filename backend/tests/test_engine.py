@@ -4,11 +4,13 @@ from backend.SimulationEngine import SimulationEngine
 from backend.queues import HoldingQueue, TakeOffQueue
 
 class TempParams:
-    def __init__(self):
+    def __init__(self, inbound_rate: float = 0.6, outbound_rate: float = 0.4):
         self.fuel_emergency_min = 15
         self.fuel_min_min = 10
         self.max_takeoff_wait_min = 30
         self.tick_size_min = 1
+        self.inbound_rate_per_hour = inbound_rate
+        self.outbound_rate_per_hour = outbound_rate
 
 class TempStats:
     def __init__(self):
