@@ -15,7 +15,7 @@ class Runway:
     def isAvailable(self):
         return self.occupancy == "FREE" and self.status == "AVAILABLE"
 
-    def assign(self, aircraft, operationMode, time: int, duration: int = 1) -> None:
+    def assign(self, aircraft, operationMode="LANDING", time: int = 0, duration: int = 1) -> None:
         self.currentAircraft = aircraft
         self.currentOperation = operationMode
         self.occupiedUntil = time + duration
