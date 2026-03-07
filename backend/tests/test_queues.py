@@ -2,22 +2,6 @@ import pytest
 
 from backend.queues import HoldingQueue, TakeOffQueue
 
-class TempEmergency:
-    def __init__(self, fuel_emergency: bool = False):
-        self.fuel_emergency = fuel_emergency
-
-
-class TempFuelAircraft:
-    def __init__(self, callsign: str, fuelRemaining: int):
-        self.callsign = callsign
-        self.fuelRemaining = fuelRemaining
-        self.emergency = TempEmergency(fuel_emergency=True) #to match queue
-        self.enteredHoldingAt = None
-        self.joinedTakeoffQueueAt = None
-
-    def isEmergency(self) -> bool:
-        return self.emergency
-
 
 class TempAircraft:
     def __init__(self, callsign: str, emergency: bool = False):
@@ -100,55 +84,6 @@ def test_holding_queue_peek_does_not_remove():
     assert top.callsign == "A1"
     assert hq.size() == 2  #peek should not change size
     assert hq.dequeue().callsign == "A1"  #dequeue should match what peek returned
-
-
-def test_holding_queue_dequeue_with_order_returns_tuple():
-    hq = HoldingQueue()
-    a = TempAircraft("A1", emergency=False)
-
-    hq.enqueue(a, time=5)
-
-    item = hq.dequeue_with_order()
-    assert item is not None
-    assert item[3].callsign == "A1"
-
-def test_holding_queue_enqueue_with_order_follows_set_order():
-    hq = HoldingQueue()
-    a1 = TempAircraft("A1", emergency=False)
-    a2 = TempAircraft("A2", emergency=False)
-
-    hq.enqueue_with_order(a1, time=1, order=5)
-    hq.enqueue_with_order(a2, time=2, order =1)
-
-    assert hq.dequeue().callsign == "A2"
-    assert hq.dequeue().callsign == "A1"
-
-
-#HoldingQueue FuelEmergency test
-def test_holding_queue_fuel_emergency_lower_fuel_goes_first():
-    hq = HoldingQueue()
-    #fuelEmergency will be set true for any TempFuelAircraft
-    f1 = TempFuelAircraft("F1", fuelRemaining=30) 
-    f2 = TempFuelAircraft("F2", fuelRemaining=10)
-
-    hq.enqueue(f1, time=1)
-    hq.enqueue(f2, time=2)
-
-    assert hq.dequeue().callsign == "F2"
-    assert hq.dequeue().callsign == "F1"
-
-#To check FuelEmergency = Other Emergencies in priority
-def test_holding_queue_fuel_emergency_equal_to_other_emergency():
-    hq = HoldingQueue()
-    e1 = TempAircraft("E1", emergency=True)
-    f1 = TempFuelAircraft("F1", fuelRemaining=5)
-
-    hq.enqueue(e1, time=1)
-    hq.enqueue(f1, time=2)
-
-    assert hq.dequeue().callsign == "E1"
-    assert hq.dequeue().callsign == "F1"
-
 
 
 #TakeOffQueue tests

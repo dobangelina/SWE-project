@@ -280,7 +280,7 @@ class SimulationEngine:
             if item is not None:
                 temp_holding.append(item)
 
-        for _, _, order, aircraft in temp_holding:
+        for _, order, aircraft in temp_holding:
             aircraft.consumeFuel(dt)
 
             if aircraft.fuelRemaining <= self.params.fuel_emergency_min:

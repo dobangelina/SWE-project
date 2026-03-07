@@ -21,16 +21,13 @@ class HoldingQueue:
     #adds a new aircraft to the queue, returns None
     def enqueue(self, a: Aircraft, time: int) -> None:
 
-        is_fuel_emergency = bool(a.emergency and getattr(a.emergency, "fuel_emergency", False))
 
         if a.isEmergency():
             emergency_priority = 0  # all emergencies equal priority
         else:
             emergency_priority = 1  # non-emergencies after all emergencies
 
-        fuel_key = a.fuelRemaining if is_fuel_emergency else 10 ** 9
-
-        self.items.put((emergency_priority,fuel_key, self.arrival_order, a))
+        self.items.put((emergency_priority, self.arrival_order, a))
         #increment the order (acts like a counter)
         self.arrival_order += 1
         
@@ -41,23 +38,20 @@ class HoldingQueue:
         a.altitude = (self.size() + 1) * 1000
 
     def enqueue_with_order(self, a: Aircraft, time: int, order: int) -> None:
-        is_fuel_emergency = bool(a.emergency and getattr(a.emergency, "fuel_emergency", False))
 
         if a.isEmergency():
             emergency_priority = 0  # all emergencies equal priority
         else:
             emergency_priority = 1  # non-emergencies after all emergencies
 
-        fuel_key = a.fuelRemaining if is_fuel_emergency else 10 ** 9
-
-        self.items.put((emergency_priority, fuel_key, order, a))
+        self.items.put((emergency_priority, order, a))
         a.enteredHoldingAt = time
 
     def dequeue_with_order(self):
         if self.items.empty():
             return None
-        emergency_priority, fuel_key, order, aircraft = self.items.get()
-        return emergency_priority, fuel_key, order, aircraft
+        emergency_priority, order, aircraft = self.items.get()
+        return emergency_priority,  order, aircraft
 
     
     #removes the top aircraft from the queue and returns it (None if empty)
@@ -66,7 +60,7 @@ class HoldingQueue:
         if self.items.empty():
             return None
         #unpacking tuple to get aircraft
-        _, _, _, aircraft_obj = self.items.get()
+        _, _, aircraft_obj = self.items.get()
         return aircraft_obj
     
     #returns the aircraft at the top of the queue (None if empty)
@@ -74,7 +68,7 @@ class HoldingQueue:
         #check if queue empty return None
         if self.items.empty():
             return None
-        return self.items.queue[0][3]
+        return self.items.queue[0][2]
 
     #returns the size of the Holding queue
     def size(self) -> int:
@@ -82,7 +76,7 @@ class HoldingQueue:
 
     def to_list(self):
         # For UI snapshot
-        return [t[3] for t in list(self.items.queue)]
+        return [t[2] for t in list(self.items.queue)]
 
 
 class TakeOffQueue:
