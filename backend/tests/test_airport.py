@@ -252,7 +252,3 @@ class TestAirport:
         assert r.occupancy == "OCCUPIED"
         assert r.currentAircraft is not None
 
-        
-
-
-
