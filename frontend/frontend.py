@@ -12,6 +12,15 @@ from backend.runway import Runway
 from backend.airport import Airport
 from backend.aircraft import Aircraft
 
+import os
+import sys
+
+def resource_path(relative_path):
+    """Return absolute path to resource (works for dev and PyInstaller)."""
+    if hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
 # Define the main class for the user interface
 class AirportUI:
     # Initialize the UI with the root window and simulation engine
@@ -64,23 +73,23 @@ class AirportUI:
         # Open settings immediately on launch
         self.open_simulation_settings()
 
-    # Preloads images to avoid disk I/O lag during simulation
     def preload_images(self):
         assets = [
-            "display_plane.png", 
-            "display_plane_waiting.png", # New image for ground queue
-            "display_plane_on_runway.png", 
+            "display_plane.png",
+            "display_plane_waiting.png",
+            "display_plane_on_runway.png",
             "display_runway.png",
-            "idle_icon.png"
+            "idle_icon.png",
         ]
-        # Iterate through assets and load them into memory
+
         for name in assets:
             try:
-                path = f"frontend/assets/{name}"
+                path = resource_path(os.path.join("frontend", "assets", name))
                 img = Image.open(path).convert("RGBA")
                 self.base_images[name] = img
+                print(f"Loaded asset: {path}")
             except Exception as e:
-                print(f"Warning: Could not load {name}: {e}")
+                print(f"Warning: Could not load {name} from {path}: {e}")
 
     # Configure the main window dimensions and colors
     def setup_window(self):
