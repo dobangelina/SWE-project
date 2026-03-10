@@ -171,7 +171,7 @@ class AirportUI:
         # Open statistics window showing saved data
         self.open_statistics(show_saved=True, stop_flow=True)
 
-    # --- UI Builders ---
+
 
     # Helper function to create a UI section with optional scrolling
     def create_section(self, parent, x, y, w, h, name, title=True, scrollable=False):
