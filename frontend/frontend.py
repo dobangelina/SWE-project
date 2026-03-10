@@ -373,13 +373,13 @@ class AirportUI:
                     "Rate of emergencies:": float(entries["Rate of emergencies:"].get()),
                 }
 
-                # Restore Validation Rules (sorry)
+                # Restore Validation Rules
                 rules = {
                     "Number Of Runways:": (1, 10, False),
                     "Inbound flow (per hour):": (1, 45, False),
                     "Outbound flow (per hour):": (1, 45, False),
                     "Simulation speed multiplier:": (0, 10, True),
-                    "Max take off wait (mins):": (10, 59, False),
+                    "Max take off wait (mins):": (20, 59, False),
                     "Min fuel levels (mins):": (10, 30, False),
                     "Rate of emergencies:": (0, 50, True),
                 }
