@@ -80,6 +80,8 @@ class AirportUI:
             "display_plane_on_runway.png",
             "display_runway.png",
             "idle_icon.png",
+            "cycle_icon.png",
+            "warning_icon.png"
         ]
 
         for name in assets:
@@ -639,6 +641,11 @@ class AirportUI:
         else:
             self.toggle_pause(force_play=True)
 
+    def clear_info_panel(self):
+        for w in list(self.display_info_frame.winfo_children()):
+            w.destroy()
+        tk.Label(self.display_info_frame, text="Nothing Selected", bg=self.lightest_grey, fg=self.text_color, font=("Arial", int(14 * self.scale), "bold")).place(relx=0, rely=0, relwidth=1, anchor="nw")
+        
     # Main simulation tick function
     def simulation_tick(self):
         if self.engine.is_paused: return
@@ -698,9 +705,7 @@ class AirportUI:
             if should_reset:
                 self.selection_data = None
                 self.show_idle_display()
-                # Clear Info Panel
-                for w in self.display_info_frame.winfo_children(): w.destroy()
-                tk.Label(self.display_info_frame, text="Nothing Selected", bg=self.lightest_grey, font=("Arial", int(14 * self.scale), "bold")).place(relx=0.5, rely=0.5, anchor="center")
+                self.clear_info_panel()
 
         speed = float(getattr(self.engine, 'speed_multiplier', 1.0))
         interval = int(1000 / speed) if speed > 0 else 1000
@@ -782,6 +787,7 @@ class AirportUI:
                 if self.selection_data and self.selection_data['id'] == pid:
                     self.selection_data = None
                     self.show_idle_display()
+                    self.clear_info_panel()
                 widget_dict[pid]["frame"].destroy()
                 del widget_dict[pid]
 
@@ -900,8 +906,23 @@ class AirportUI:
 
         bf = tk.Frame(widget_frame, bg=self.lightest_grey)
         bf.grid(row=0, column=1, sticky="ne")
-        tk.Button(bf, text="Status", bg=self.lightest_grey, padx=5, relief="solid", command=lambda r=rw, wf=widget_frame, c=pc: self.cycle_runway_status(r, wf, c, pg_settings)).pack(side="right", padx=(2, 0))
-        tk.Button(bf, text="Mode", bg=self.lightest_grey, padx=5, relief="solid", command=lambda: self.cycle_runway_mode(rw)).pack(side="right")
+
+        # Create button images (small size for buttons)
+        btn_size = int(20 * self.scale)
+
+        cycle_img = self.base_images["cycle_icon.png"].resize((btn_size, btn_size), Image.BICUBIC)
+        cycle_photo = ImageTk.PhotoImage(cycle_img)
+
+        warning_img = self.base_images["warning_icon.png"].resize((btn_size, btn_size), Image.BICUBIC)
+        warning_photo = ImageTk.PhotoImage(warning_img)
+
+        mode_btn = tk.Button(bf, image=cycle_photo, bg=self.lightest_grey, padx=5, relief="solid", command=lambda: self.cycle_runway_mode(rw))
+        mode_btn.image = cycle_photo 
+        mode_btn.pack(side="right", padx=(2, 0))
+
+        status_btn = tk.Button(bf, image=warning_photo, bg=self.lightest_grey, padx=5, relief="solid", command=lambda r=rw, wf=widget_frame, c=pc: self.cycle_runway_status(r, wf, c, pg_settings))
+        status_btn.image = warning_photo
+        status_btn.pack(side="right", padx=(0, 2))
 
         tl = tk.Label(widget_frame, text="", bg=self.lightest_grey, font=("Arial", int(12 * self.scale), "bold"), anchor="w")
         bl = tk.Label(widget_frame, text="", bg=self.lightest_grey, font=("Arial", int(10 * self.scale), "bold"), anchor="w")
@@ -967,7 +988,8 @@ class AirportUI:
     def cycle_runway_status(self, rw, wf, pc, pgs):
         if rw in self.pending_runway_removals: return
         status_order = ["AVAILABLE", "Closed"]
-        current = self.pending_status_changes.get(rw, rw.status)
+        pending = self.pending_status_changes.get(rw)
+        current = pending[0] if pending else rw.status
         next_status = status_order[(status_order.index(current) + 1) % len(status_order)]
 
         if rw.currentAircraft is None:
@@ -1082,7 +1104,7 @@ class AirportUI:
             lbl.pack(expand=False)
             
         # Reset the status label text since we are idle
-        self.display_status_label.config(text="")
+        self.display_status_label.config(text="Nothing Selected")
         # Keep the placement consistent even when empty
         self.display_status_label.place(relx=0, rely=0, anchor="nw")
         self.display_status_label.lift()
