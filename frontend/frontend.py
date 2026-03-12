@@ -17,10 +17,12 @@ def resource_path(relative_path):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
 
-# Define the main class for the user interface
 class AirportUI:
-    # Initialize the UI with the root window and simulation engine
+    """Define the main class for the user interface"""
+
     def __init__(self, root, engine):
+        """Initialize the UI with the root window and simulation engine"""
+
         self.root = root
         self.engine = engine
 
@@ -71,6 +73,7 @@ class AirportUI:
 
     def preload_images(self):
         """Loads images from assets folder into cache. Prevents the need to reload images."""
+
         assets = [
             "display_plane.png",
             "display_plane_waiting.png",
@@ -80,7 +83,6 @@ class AirportUI:
             "cycle_icon.png",
             "warning_icon.png"
         ]
-
         for name in assets:
             try:
                 path = resource_path(os.path.join("frontend", "assets", name))
@@ -91,6 +93,7 @@ class AirportUI:
 
     def setup_window(self):
         """Configure the main window dimensions and colours. Sizing depends on the size of the users screen."""
+
         self.window_w = self.root.winfo_screenwidth() - 100
         self.window_h = self.root.winfo_screenheight() - 100
 
@@ -141,6 +144,7 @@ class AirportUI:
 
     def bind_keys(self):
         """Bind keyboard shortcuts to settings functions."""
+
         self.root.bind("P", lambda x: self.toggle_pause())
         self.root.bind("p", lambda x: self.toggle_pause())
         self.root.bind("S", lambda x: self.open_simulation_settings())
@@ -154,6 +158,7 @@ class AirportUI:
 
     def stop_simulation(self):
         """Function to stop the simulation and save the final report"""
+
         self.toggle_pause(force_pause=True)
         try:
             # Capture the final state
@@ -223,7 +228,8 @@ class AirportUI:
         window = canvas.create_window((0, 0), window=scrollable_inner_frame, anchor="nw")
 
         def update_scroll_visibility(event=None):
-            """Function to handle scrollbar visibility"""
+            """Function to handle scrollbar visibility"""#
+
             inner_frame.update_idletasks()
             content_height = scrollable_inner_frame.winfo_reqheight()
             visible_height = canvas.winfo_height()
@@ -267,10 +273,12 @@ class AirportUI:
         x_pos = self.margin_x
         # Create takeoff queue section
         self.takeoff_queue_frame = self.create_section(self.root, x_pos, self.margin_y, self.col_w_standard, self.top_col_h, "Take-off Queue", scrollable=True)
+        self.takeoff_queue_title = self.takeoff_queue_frame.master.master.winfo_children()[0] # Stores the title label.
 
         x_pos += self.col_w_standard + self.gap
         # Create holding queue section
         self.holding_queue_frame = self.create_section(self.root, x_pos, self.margin_y, self.col_w_standard, self.top_col_h, "Holding Queue", scrollable=True)
+        self.holding_queue_title = self.holding_queue_frame.master.master.winfo_children()[0] 
 
         x_pos += self.col_w_standard + self.gap
         # Create visual display area
@@ -658,8 +666,6 @@ class AirportUI:
         if getattr(self, "ui_built", False):
             self.update_ui()
 
-
-    # 
     def toggle_pause(self, force_pause=False, force_play=False):
         """
             Function to pause and play the simulation.
@@ -860,6 +866,7 @@ class AirportUI:
 
     def update_ui(self):
         """Refresh the entire UI state."""
+
         all_runways = self.engine.get_runways()
         active_inbound = [r.currentAircraft for r in all_runways if r.currentAircraft and r.currentAircraft.type == "INBOUND"]
         full_holding_list = active_inbound + self.engine.get_holding_queue()
@@ -870,6 +877,8 @@ class AirportUI:
         self.update_plane_queue(full_takeoff_list[:50], self.takeoff_queue_frame, self.takeoff_plane_widgets)
         self.update_runway_queue(all_runways, self.runway_queue_frame, self.runway_widgets)
         self.clock_label.config(text=f"{self.format_time(self.engine.get_time())}")
+        self.takeoff_queue_title.config(text=f"Take-off Queue ({len(full_takeoff_list)})")
+        self.holding_queue_title.config(text=f"Holding Queue ({len(full_holding_list)})")
 
     def format_time(self, time_var):
         """
@@ -880,6 +889,7 @@ class AirportUI:
             time_var : int
                 The time bveing converted into a more readable format for UI
         """
+
         hours = (time_var // 60) % 24
         minutes = time_var % 60
         return f"{hours:02d}:{minutes:02d}"
@@ -1078,6 +1088,7 @@ class AirportUI:
             Dictionary
                 A dictionrary of key-value pairs containing data about the widget.
         """
+
         widget_frame = tk.Frame(queue_col, bg=self.lightest_grey, padx=5, pady=5, cursor="hand2")
         widget_frame.pack(fill="x", pady=4, padx=(4, 22))
         widget_frame.columnconfigure(0, weight=1)
@@ -1416,6 +1427,7 @@ class AirportUI:
             runway : Runway
                 The runway object the information is being shown about.
         """
+
         for w in self.display_info_frame.winfo_children(): w.destroy()
         tk.Label(self.display_info_frame, text=f"Runway {rw.id}", bg=self.lightest_grey, font=("Arial", int(14 * self.scale), "bold")).place(x=0, y=0, relwidth=1)
         f = tk.Frame(self.display_info_frame, bg=self.lightest_grey)
@@ -1458,6 +1470,7 @@ class AirportUI:
             id_str : String
                 The widget ID (callsign for planes and id for runways.)
         """
+
         if self.selection_data:
             try:
                 self.update_widget_colours(self.selection_data["widget"]["frame"], self.lightest_grey)
@@ -1466,8 +1479,9 @@ class AirportUI:
         self.selection_data = {'type': type_str, 'id': id_str, 'widget': widget}
         self.update_widget_colours(widget["frame"], "#c8c6c6")
 
-# Entry point to launch the UI
 def create_ui(engine):
+    """Entry point to launch the UI."""
+
     root = tk.Tk()
     root.withdraw()
     app = AirportUI(root, engine)
